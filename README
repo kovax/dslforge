@@ -1,0 +1,31 @@
+The primary goal of the Project is to help DSL development by providing a flexible framework which enable easy extension and modification of DSLs, and also supports integration of existing classes.
+
+It is based on the approach described in the 'A Groovy DSL from scratch in 2 hours' post by Steven Devijver, in which each new term in the script are delegate to a specific class. I have found this the neat way of separating concerns, so I have generalised it a bit further, I have added  some conventions inspired by grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
+
+1. Config entry to specify Delegate classes
+
+Add the [dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium] specification to the dls.delegates entry, and you can execute the following script:
+
+selenium "localhost", 4444, "*firefox", "http://www.google.com/", {
+    start
+    open "/"
+    type "q", "selenium rc"
+    click "btnG"
+    waitForPageToLoad "30000"
+}
+
+DSLEngine takes the value of dslKey and registers a method called selenium in the EMC class of the script. The method takes the 4 parameters, and calls the constructor of DefaultSelenum with all of them. In general, the parameters passed the EMC method are used to construct the delegate class.
+
+2. The dsl can be executed as a groovy Script or Closure
+
+The DSLEngine has 2 run() methods, one takes a name of the script file, the other takes a Closure, and both updates the dsl instances with the enhanced EMC.
+
+3. The execution context (or binding) of the dsl is injected into each delegate class
+
+The variable called context, instance of the Binding class, is injected into each delegate class. The DSLEngine can be initialised with an existing Binding instance, so you have all the possible ways to share data between different parts of the execution environment. As you very likely know, Binding is used in the Script class by default, so support this feature in Closure
+
+4. Decorator - Category
+
+5. Method aliases
+
+6. BindingConvention, processClosure( cl )
