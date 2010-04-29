@@ -11,17 +11,12 @@ import org.junit.Test;
 
 import com.thoughtworks.selenium.DefaultSelenium;
 
-class DelegateTests {
-
-    def timeStamp
-    def context
-    def dsle
+class DelegateTests extends TestBase {
 
     @Before
-    public void before () {
-        timeStamp = System.currentTimeMillis()
-        context = new Binding()
+    public void init() {
         dsle = new DSLEngine(context, "src/test/conf/DelegateTestConfig.groovy", "development")
+    	super.init()
     }
     
     @Test

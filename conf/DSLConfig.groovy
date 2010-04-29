@@ -2,6 +2,7 @@ environments {
      development {
          dsl.emcInheritance = true
          dsl.scripts = 'src/test/scripts'
+         dsl.evaluate = ["evaluate", "include"]
          dsl.delegates = [org.beedom.dslforge.test.delegates.MetaBuilderDelegate,
                           org.beedom.dslforge.test.delegates.WebShopDelegate,
                           org.beedom.dslforge.test.delegates.ScenarioDelegate,

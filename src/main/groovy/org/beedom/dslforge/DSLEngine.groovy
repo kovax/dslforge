@@ -256,7 +256,7 @@ public class DSLEngine  {
             throw new MissingMethodException(name, delegate.class, args)
         }
 
-        //
+        //Convention: For the missing property check if there is a method with no arguments, and call it
         clazz.metaClass.propertyMissing = { String name -> 
             def methods = delegate.metaClass.respondsTo(delegate.class, name, null)
             if(!methods) {
@@ -351,25 +351,25 @@ public class DSLEngine  {
      */
     private Closure getEMCClosure() {
         return { ExpandoMetaClass emc ->
-            /*
-             emc.include = { String filename ->
-             println "ecm.include file: ${filename}"
-             run( filename )
-             }
-             */
-
             //TODO: implement convention to discover classes by looking for Delegate in their names, 
             //or listing classes in delegates source directory
             if(!dslConfig.dsl.delegates) {
-                log.info("NO delegate class was specified in DSL Config file")
+                log.warning("NO delegate class was specified in DSL Config file")
+            }
+
+            //Add these methods in case the DSL needs to support evaluate/include
+            dslConfig.dsl?.evaluate.each { evalMethod ->
+                log.fine("Adding evaluate methods to ECM: $evalMethod")
+                
+            	emc."$evalMethod" = { String file -> run(file) }
+            	emc."$evalMethod" = { Closure cl -> run(cl) }
             }
             
             dslConfig.dsl?.delegates.each { delegateConfig ->
-                def clazz  = getDelegateClazz(delegateConfig)
-                def dslKey = getDelegateDslKey(delegateConfig)
-                
+                def clazz   = getDelegateClazz(delegateConfig)
+                def dslKey  = getDelegateDslKey(delegateConfig)
                 def methods = [dslKey]
-
+                
                 if(clazz.metaClass.properties.find{it.name=="aliases"} && clazz.aliases) {
                     convertAliasDefinition( dslKey, clazz.aliases )
                 }
@@ -379,7 +379,7 @@ public class DSLEngine  {
                     methods += aliases[dslKey]
                 }
                 
-                log.fine("ECM method names: $methods")
+                log.fine("ECM method names including aliases: $methods")
                 
                 enhanceDelegateByConvention(clazz)
 

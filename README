@@ -1,10 +1,10 @@
-The primary goal of the Project is to help DSL development by providing a flexible framework which enable easy extension and modification of DSLs, and also supports integration of existing classes.
+The primary goal of the project is to help DSL development by providing a flexible framework which enable easy extension and modification of DSLs, and also supports integration of existing classes.
 
-It is based on the approach described in the 'A Groovy DSL from scratch in 2 hours' post by Steven Devijver, in which each new term in the script are delegate to a specific class. I have found this the neat way of separating concerns, so I have generalised it a bit further, I have added  some conventions inspired by grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
+It is based on the approach described in the A Groovy DSL from scratch in 2 hours post by Steven Devijver, in which each new term in the DSL are delegate to a method of a specific delegate class. I have found this the neat way of separating concerns, so I have generalised it a bit further, I have added some conventions inspired by Grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
 
-1. Config entry to specify Delegate classes
+1. Configuration entry to specify Delegate classes
 
-Add the [dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium] specification to the dls.delegates entry, and you can execute the following script:
+Add the [dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium]specification to the dls.delegates entry (it expects a list of classes or maps) in the config file, and you can execute the following script:
 
 selenium "localhost", 4444, "*firefox", "http://www.google.com", {
     start
@@ -14,18 +14,43 @@ selenium "localhost", 4444, "*firefox", "http://www.google.com", {
     waitForPageToLoad "30000"
 }
 
-DSLEngine takes the value of dslKey and registers a method called selenium in the EMC class of the script. The method takes the 4 parameters, and calls the constructor of DefaultSelenum with all of them. In general, the parameters passed the EMC method are used to construct the delegate class.
+DSLEngine takes the value of dslKey and registers a method called selenium in the EMC class of the script. The method takes the 4 parameters, and calls the constructor of DefaultSelenum with all of them. In general, the parameters passed the EMC method are used to construct the delegate class. The dslKey can also be specified in the delegate class itself. Check the SeleniumDelagateTests for more details, for example see that Groovy handles nesting delegates very nicely.
 
-2. The dsl can be executed as a groovy Script or Closure
+2. The DSL can be executed as a groovy Script or Closure
 
-The DSLEngine has 2 run() methods, one takes a name of the script file, the other takes a Closure, and both updates the dsl instances with the enhanced EMC.
+The DSLEngine has 2 run() methods, one takes a name of the script file and the other takes a Closure. Both updates the DSL instances with the enhanced EMC.
 
-3. The execution context (or binding) of the dsl is injected into each delegate class
+3. The execution context (or binding) of the DSL is injected into each delegate class
 
-The variable called context, instance of the Binding class, is injected into each delegate class. The DSLEngine can be initialised with an existing Binding instance, so you have all the possible ways to share data between different parts of the execution environment. As you very likely know, Binding is used in the Script class by default, so support this feature in Closure
+The variable called context, instance of the Binding class, is injected into each delegate class. The DSLEngine can be initialised with an existing Binding instance, so you have all the possible ways to share data between different parts of the execution environment. As you very likely know Binding is used in the Script class by default, so to support context sharing in Closures the DSLEngine assign its context property to the delegate field of Closure instance. Check the DSLContextTests from more details.
 
-4. Decorator - Category
+4. Configuration entry to specify Category classes
 
-5. Method aliases
+The dsl.categories  entry in the config file can specify a list of Category classes, and the DLSEngine will execute the Script or Closure within the closure of use(categories) method call. Check the DecoratorTests for more details.
 
-6. BindingConvention, processClosure( cl )
+5. Method aliases in delegate classes
+
+Each delegate class may have a static aliases property, which holds a map, in which you can specify the list of aliases for any methods that the delegate is implemeneting. This way it is easy to implement the same DSL in different languages or adjust it for different problem domains. Check the DelegateTests for more details. 
+
+6. EMC method calls processClosure(closure) of the delegate class
+
+If you require to take the full control on how the closure is executed in your DSL implementation, you can define a processClosure(Closure) method in your delegate class. DSLEngine looks for that methods, and if it exists, it will call it instead of setting up the delegation pattern. It was used in my functional testing project to setup fixture data in a very user friendly way. Consider the following DSL snippet from the AllFuntionalityScript.
+
+define {
+    user {
+        kind = "customer"
+        userid = "test@d${timeStamp}d.com"
+        password = "hellobaby"
+        firstName = "Test"
+        lastName = "Customer_${timeStamp}"
+        title = "Mr."
+        sex = "M"
+    }
+}
+assert customer
+
+The define keyword is associated with the MetaBuilderDelegate class, which has the processClosure() method. MetaBuilder provides a very flexible solution to populate Beans, and as it can use Closure it integrates very well with DSLEngine. MetaBuilderDelegate initialise itself from a script containing the schema definition and a map called objectKeys, and using the BindingConvention it adds the customer property of User class to the context.
+
+Future work
+
+Well, it very much depends on the feedback I hope to get from all of you. I will certainly use it for my future projects, so I am going to add features that I need. I think some nice DSL aware error handling could be very useful, specially with localisation support. Also I would be interested in developing an eclipse editor which can take the content of delegate classes to provide code completion and syntax highlight. A Grails plugin can be done, although a lot of testing is needed to check if many instances if the same DSL script can be run at the same time.
