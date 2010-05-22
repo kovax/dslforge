@@ -1,6 +1,9 @@
 usePlugin 'groovy'
 
 version = '1.0'
+mainClass = 'org.beedom.dslforge.DSLEngine'
+
+manifest.mainAttributes("Implementation-Title": "DSLForge", "Implementation-Version": version, "Main-Class": mainClass)
 
 repositories {
     mavenCentral()
@@ -9,6 +12,7 @@ repositories {
 
 dependencies {
     groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.0'
+    compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
     testCompile group: 'groovytools-builder', name: 'groovytools-builder', version: '1.1.6'
     testCompile group: 'selenium-java-client-driver', name: 'selenium-java-client-driver', version: '1.0.1'
     testCompile group: 'selenium-server', name: 'selenium-server', version: '1.0.3'

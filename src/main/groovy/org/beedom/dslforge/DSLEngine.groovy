@@ -57,20 +57,47 @@ public class DSLEngine  {
     
     
     /**
-     * Quick and dirty (for the time beeing) to run DSL script from a command line
+     * Run DSL script from a command line
      * 
      * @param args
      */
     public static void main(String[] args) {
-        //TODO: add CLI support
-        if( args.length == 1 ) {
-            def dse = new DSLEngine()
-            dse.run(args[0])
+    	
+    	def cli = new CliBuilder(usage: 'dslengine -[chfe] [file/directory name/pattern]')
+
+        cli.with {
+            h longOpt: 'help', 'Show usage information'
+            c longOpt: 'config-file', args: 1, argName: 'confFile', 'Configuration file'
+            e longOpt: 'config-env',  args: 1, argName: 'confEnv', 'Configuration environment'
+            //p longOpt: 'paralell', 'Paralell execution'
         }
-        else {
-            def dse = new DSLEngine( args[0], args[1] )
-            dse.run(args[2])
+
+        def options = cli.parse(args)
+        if (!options) {
+            return
         }
+
+        // Show usage text when -h or --help option is used.
+        if (options.h) {
+            cli.usage()
+            return
+        }
+        
+        def confFile
+        def confEnv
+        
+        if (options.c) {
+        	confFile = options.c
+        }
+
+        if (options.e) {
+        	confEnv = options.e
+        }
+        
+        def arguments = options.arguments()
+        def dse = new DSLEngine( confFile, confEnv )
+        
+        options.arguments().each{ dse.run(it) }
     }
     
     
