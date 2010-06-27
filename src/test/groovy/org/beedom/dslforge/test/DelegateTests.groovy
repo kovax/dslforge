@@ -59,6 +59,19 @@ class DelegateTests extends TestBase {
         }//End of dsle.run
     }
 
+    @Test
+    public void nestedFeature() {
+        dsle.run {
+            dryRunScenario = false
+            feature "Feature 1", {
+            	in_order "principle 1"
+                feature "Feature 1.1", {
+                	in_order "principle 1.1"
+                }
+            	in_order "principle 2"
+            }
+        }
+    }
 
     @Test
     public void useAlias() {

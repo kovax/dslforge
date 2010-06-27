@@ -4,7 +4,7 @@ It is based on the approach described in the A Groovy DSL from scratch in 2 hour
 
 1. Configuration entry to specify Delegate classes
 
-Add the [dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium]specification to the dls.delegates entry (it expects a list of classes or maps) in the config file, and you can execute the following script:
+Add the [dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium] specification to the dls.delegates entry (it expects a list of classes or maps) in the config file, and you can execute the following script:
 
 selenium "localhost", 4444, "*firefox", "http://www.google.com", {
     start
@@ -50,6 +50,22 @@ define {
 assert customer
 
 The define keyword is associated with the MetaBuilderDelegate class, which has the processClosure() method. MetaBuilder provides a very flexible solution to populate Beans, and as it can use Closure it integrates very well with DSLEngine. MetaBuilderDelegate initialise itself from a script containing the schema definition and a map called objectKeys, and using the BindingConvention it adds the customer property of User class to the context.
+
+7. Nested calls of the same DSL keyword can be handled by the same delegate instance.
+
+feature "Feature 1", {
+    in_order "principle 1"
+    feature "Feature 1.1", {
+        in_order "principle 1.1"
+    }
+    in_order "principle 2"
+}
+
+In this example the delegate class for the "feature" term will be constructed twice. If you need to avoid that, the delegate class can define a static property called sharedInstance. In this case the DSLEngine stores the instance of the delegate class, and retrieves it for the second "feature", and calls its init(args) method instead of calling its constructor.
+
+8. DSLEngine has a main() to support execution from a command line
+
+It is based on CliBuilder ...
 
 Future work
 

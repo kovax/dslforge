@@ -34,18 +34,19 @@ public class DSLEngine  {
     private Binding context
 
     private GroovyScriptEngine gse
-    
+
     private def injectedAliases = Collections.synchronizedMap([:])
-    
+    private def delegatesMap = Collections.synchronizedMap([:])
+
     public DSLEngine() {
         init()
     }
-    
+
     public DSLEngine(Binding context) {
         this.context = context
         init()
     }
-    
+
     public DSLEngine(Binding context, String configFile, String configEnv) {
         this.context = context
         init(configFile,configEnv)
@@ -62,8 +63,8 @@ public class DSLEngine  {
      * @param args
      */
     public static void main(String[] args) {
-    	
-    	def cli = new CliBuilder(usage: 'dslengine -[chfe] [file/directory name/pattern]')
+        
+        def cli = new CliBuilder(usage: 'dslengine -[chfe] [file/directory name/pattern]')
 
         cli.with {
             h longOpt: 'help', 'Show usage information'
@@ -105,7 +106,11 @@ public class DSLEngine  {
         init(null,null)
     }
     
-    
+    /**
+     * 
+     * @param configFile
+     * @param configEnv
+     */
     public void init(String configFile, String configEnv) {
         if(!configEnv) {
             configEnv = "development"
@@ -127,7 +132,11 @@ public class DSLEngine  {
         }
     }
 
-
+    /**
+     * 
+     * @param scriptName
+     * @return
+     */
     def run(String scriptName) {
         if(!gse) {
             gse = new GroovyScriptEngine( dslConfig.dsl.scripts, "conf" )
@@ -143,7 +152,11 @@ public class DSLEngine  {
         }
     }
     
-    
+    /**
+     * 
+     * @param cl
+     * @return
+     */
     def run(Closure cl) {
         cl.metaClass = createEMC( cl.class, getEMCClosure() )
 
@@ -180,7 +193,7 @@ public class DSLEngine  {
 
     /**
      * Convention: Get the dslKey from class or configuration entry. If none exists
-     * use the lowercase name of the class removing the Delegate from the end if needed
+     * use the lower-case name of the class removing the Delegate from the end if needed
      * 
      * @param config the object retrieved from configuration object
      * @return the dslKey string
@@ -228,16 +241,16 @@ public class DSLEngine  {
     }
     
     /**
-     * Finds real method to be called using dslKey and method name 
+     * Finds real method to be called for the alias method name
      * 
      * @param dslKey key defined in delegate class
-     * @param name the name of the method
+     * @param aliasName the alias name of the method
      * @return
      */
-    private String findAlias(delegate, String name) {
+    private String findAlias(delegate, String aliasName) {
         if(aliases) {
             try {
-                return aliases[delegate.dslKey+"-"+name]
+                return aliases[delegate.dslKey+"-"+aliasName]
             } catch (MissingPropertyException e) {
                 //TODO: make aliases work without the explicit declaration of dslKey in delegate class
             }
@@ -260,11 +273,11 @@ public class DSLEngine  {
         //Convention: Find and call real method for the missing ones using aliases
         clazz.metaClass.methodMissing = { String name, args ->
             def alias = findAlias(delegate, name)
-            
+
             if(alias) {
                 def types = args.collect {it.class} as Object[]
                 def methods = delegate.metaClass.respondsTo(delegate.class, alias, types)
-                
+
                 if(methods) {
                     assert 1 == methods.size(), "Ambiguous method list found for aliasing '${name}' to '${alias}'"
                     
@@ -272,8 +285,8 @@ public class DSLEngine  {
                     //delegate.metaClass."$name" = { Object[] varArgs ->
                     //    methods[0].invoke(delegate, args)
                     //}
-                    
-                    //Set the value of dslAlias property for the time of the method call
+
+                    //Set the value of dslAlias property for the time of the method call only
                     injectedAliases[delegate.class] = name
                     def returns = methods[0].invoke(delegate, args)
                     injectedAliases[delegate.class] = null
@@ -301,76 +314,75 @@ public class DSLEngine  {
             throw new MissingPropertyException(name, delegate.class)
         }
     }
-    
-    //TODO: implement closure declaration with variable argument list if possible
-    private Closure getProcessClosure0Args(Class clazz) {
-        return { Closure cl ->
-            return clazz.newInstance().processClosure(cl)
-        }
-    }
-    private Closure getProcessClosure1Args(Class clazz) {
-        return { arg1, Closure cl ->
-            return clazz.newInstance(arg1).processClosure(cl)
-        }
-    }
-    private Closure getProcessClosure2Args(Class clazz) {
-        return { arg1, arg2, Closure cl ->
-            return clazz.newInstance(arg1, arg2).processClosure(cl)
-        }
-    }
-    private Closure getProcessClosure3Args(Class clazz) {
-        return { arg1, arg2, arg3, Closure cl ->
-            return clazz.newInstance(arg1, arg2, arg3).processClosure(cl)
-        }
-    }
-    private Closure getProcessClosure4Args(Class clazz) {
-        return { arg1, arg2, arg3, arg4, Closure cl ->
-            return clazz.newInstance(arg1, arg2, arg3, arg4).processClosure(cl)
-        }
-    }
-    
-    //TODO: implement closure declaration with variable argument list if possible
-    private Closure getDelegateClosure0Args(Class clazz) {
-        return { Closure cl ->
-            cl.delegate = clazz.newInstance()
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
-            cl()
-            return cl.delegate
-        }
-    }
-    private Closure getDelegateClosure1Args(Class clazz) {
-        return { arg1, Closure cl ->
-            cl.delegate = clazz.newInstance(arg1)
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
-            cl()
-            return cl.delegate
-        }
-    }
-    private Closure getDelegateClosure2Args(Class clazz) {
-        return { arg1, arg2, Closure cl ->
-            cl.delegate = clazz.newInstance(arg1, arg2)
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
-            cl()
-            return cl.delegate
-        }
-    }
-    private Closure getDelegateClosure3Args(Class clazz) {
-        return { arg1, arg2, arg3, Closure cl ->
-            cl.delegate = clazz.newInstance(arg1, arg2, arg3)
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
-            cl()
-            return cl.delegate
-        }
-    }
-    private Closure getDelegateClosure4Args(Class clazz) {
-        return { arg1, arg2, arg3, arg4, Closure cl ->
-            cl.delegate = clazz.newInstance(arg1, arg2, arg3, arg4)
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
-            cl()
-            return cl.delegate
+
+    /**
+     * Returns a closure which calls processClosure() method of the delegate class to process
+     * the closure defined in the DSL script
+     * 
+     * @param clazz the delegate class
+     * @return the closure
+     */
+    private Closure getProcessClosure(Class clazz) {
+        return {  Object[] args ->
+            assert args, "Arguments of closure in DSL must not be empty"
+            def l = args.length
+
+            assert (args[l-1] instanceof Closure), "Last argument of closrue must be closure"
+            Closure cl = (Closure)args[l-1]
+
+            if(l==1) {
+                return clazz.newInstance().processClosure(cl)
+            }
+            else {
+                return clazz.newInstance(args[0..l-2] as Object[]).processClosure(cl)
+            }
         }
     }
 
+    /**
+     * Returns the closure which executes the closure defined in the DSL script by delegating
+     * the missing methods to the delegate class
+     * 
+     * @param clazz the delegate class
+     * @return the closure
+     */
+    private Closure getDelegateClosure(Class clazz) {
+        return { Object[] args ->
+            assert args, "Arguments of closure in DSL must not be empty"
+
+            def l = args.length
+
+            assert (args[l-1] instanceof Closure), "Last argument of closrue must be closure"
+            Closure cl = (Closure)args[l-1]
+
+            def delegateInstance = delegatesMap[clazz]
+
+            if(delegateInstance) {
+                if(l==1) {
+                    delegateInstance.init()
+                }
+                else {
+                    delegateInstance.init(args[0..l-2])
+                }
+                cl.delegate = delegateInstance
+            }
+            else {
+                if(l==1) {
+                    cl.delegate = clazz.newInstance()
+                }
+                else {
+                    cl.delegate = clazz.newInstance(args[0..l-2] as Object[])
+                }
+                
+                if(clazz.metaClass.properties.find{it.name=="sharedInstance"}) {
+                    delegatesMap[clazz] = cl.delegate
+                }
+            }
+            cl.resolveStrategy = Closure.DELEGATE_FIRST
+            cl()
+            return cl.delegate
+        }
+    }
 
     /**
      * 
@@ -407,27 +419,20 @@ public class DSLEngine  {
                 }
                 
                 log.fine("ECM method names including aliases: $methods")
+                println "ECM method names including aliases: $methods"
                 
                 enhanceDelegateByConvention(clazz)
 
                 if(clazz.metaClass.methods.find {it.name == "processClosure"}) {
                     //Convention: delegate class have processClosure() method to processes the content of the closure
                     methods.each { method ->
-                        emc."$method" = getProcessClosure0Args(clazz) 
-                        emc."$method" = getProcessClosure1Args(clazz) 
-                        emc."$method" = getProcessClosure2Args(clazz) 
-                        emc."$method" = getProcessClosure3Args(clazz) 
-                        emc."$method" = getProcessClosure4Args(clazz) 
+                        emc."$method" = getProcessClosure(clazz)
                     }
                 }
                 else {
                     //Convention: the closure is executed, and all unknown methods are delegated to the object of clazz
                     methods.each { method ->
-                        emc."$method" = getDelegateClosure0Args(clazz)
-                        emc."$method" = getDelegateClosure1Args(clazz)
-                        emc."$method" = getDelegateClosure2Args(clazz)
-                        emc."$method" = getDelegateClosure3Args(clazz)
-                        emc."$method" = getDelegateClosure4Args(clazz)
+                        emc."$method" = getDelegateClosure(clazz)
                     }
                 }
             }

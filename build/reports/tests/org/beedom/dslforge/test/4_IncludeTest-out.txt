@@ -1,0 +1,26 @@
+login - customer
+login - id:test@d1272911647108d.com pwd:hellobaby
+logout - customer
+sign in/login - customer
+sign in/login - id:test@d1272911647108d.com pwd:hellobaby
+logout - customer
+FeatureDelegate: Shopping Cart Management
+in_order to use a webshop
+as_a customer
+i_want to make changes to a shopping cart
+as_a admin
+i_want to forbid changes to a shopping cart
+ScenarioDelegate: Remove product from basket
+given logged in customer1
+provided(given) logged in customer2
+provided(given) logged in customer3
+and the customer has checked out a basket with 1 item
+és(and) a vásárló a bevásárló kocsit véglegesítettete
+when the customer removes that item from the basket
+then the basket is empty
+ScenarioDelegate: Termék törlése a kosárból
+adott(given) egy vásárló, aki azonosította magát
+és(and) a vásárló a kosarat véglegesítettete egy termékkel
+amikor(when) a vásárló törölte a terméket a kosárból
+akkor(then) a kosár üres lesz
+
