@@ -15,7 +15,7 @@ class DelegateTests extends TestBase {
 
     @Before
     public void init() {
-        dsle = new DSLEngine(context, "src/test/conf/DelegateTestConfig.groovy", "development")
+        dsle = new DSLEngine((Binding)context, "src/test/conf/DelegateTestConfig.groovy", "development")
     	super.init()
     }
     

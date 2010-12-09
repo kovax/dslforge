@@ -7,6 +7,7 @@ import org.beedom.dslforge.BindingConvention;
 
 import groovytools.builder.MetaBuilder
 
+
 /**
  * 
  * @author zs.myth
@@ -24,7 +25,7 @@ class MetaBuilderDelegate {
 	    if(!initialised) {
 	    	context.metaBuilder = new MetaBuilder()
 	    	//TODO: make file name configurable, it could be in the context
-	    	new GroovyShell(context).evaluate(new File("src/test/conf/MetaBuilderSchema.groovy"))
+	    	new GroovyShell( context ).evaluate(new File("src/test/conf/MetaBuilderSchema.groovy"))
 	    	initialised = true
 		}
 

@@ -19,6 +19,7 @@ import groovy.lang.MissingPropertyException;
 
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Pattern
 
 /**
  * 
@@ -32,28 +33,59 @@ public class DSLEngine  {
     private ConfigObject dslConfig
     private aliases = [:]
     private Binding context
+    private String scriptsHome
 
     private GroovyScriptEngine gse
 
     private def injectedAliases = Collections.synchronizedMap([:])
     private def delegatesMap = Collections.synchronizedMap([:])
 
+    /**
+     * 
+     */
     public DSLEngine() {
         init()
     }
 
+    /**
+     * 
+     * @param context
+     */
     public DSLEngine(Binding context) {
         this.context = context
         init()
     }
 
-    public DSLEngine(Binding context, String configFile, String configEnv) {
+    /**
+     * 
+     * @param context
+     * @param configFile
+     * @param configEnv
+     * @param scriptDir
+     */
+    public DSLEngine(Binding context, String configFile, String configEnv, String scriptDir) {
         this.context = context
-        init(configFile,configEnv)
+        init(configFile,configEnv, scriptDir)
     }
  
+    public DSLEngine(Binding context, String configFile, String configEnv) {
+        this.context = context
+        init(configFile,configEnv, null)
+    }
+ 
+    /**
+     * 
+     * @param configFile
+     * @param configEnv
+     * @param scriptDir
+     */
+    public DSLEngine(String configFile, String configEnv, String scriptDir) {
+        init(configFile,configEnv, scriptDir)
+    }
+    
+
     public DSLEngine(String configFile, String configEnv) {
-        init(configFile,configEnv)
+        init(configFile,configEnv, null)
     }
     
     
@@ -70,7 +102,9 @@ public class DSLEngine  {
             h longOpt: 'help', 'Show usage information'
             c longOpt: 'config-file', args: 1, argName: 'confFile', 'Configuration file'
             e longOpt: 'config-env',  args: 1, argName: 'confEnv', 'Configuration environment'
-            //p longOpt: 'paralell', 'Paralell execution'
+            d longOpt: 'script-dir',  args: 1, argName: 'scriptDir', 'Script root directory'
+            p longOpt: 'pattern',     args: 1, argName: 'pattern', 'File pattern'
+            //q longOpt: 'paralell', 'Paralell execution'
         }
 
         def options = cli.parse(args)
@@ -86,6 +120,8 @@ public class DSLEngine  {
         
         def confFile
         def confEnv
+        def scriptDir
+        def pattern
         
         if (options.c) {
         	confFile = options.c
@@ -95,15 +131,31 @@ public class DSLEngine  {
         	confEnv = options.e
         }
         
-        def arguments = options.arguments()
-        def dse = new DSLEngine( confFile, confEnv )
+        if (options.d) {
+            scriptDir = options.d
+        }
         
-        options.arguments().each{ dse.run(it) }
+        if (options.p) {
+            pattern = options.p
+        }
+        
+        def arguments = options.arguments()
+        def dse = new DSLEngine( confFile, confEnv, scriptDir )
+        
+        if(pattern) {
+            dse.run( Pattern.compile(pattern) )
+        }
+
+        if(arguments) {
+            options.arguments().each{ dse.run(it) }
+        }
     }
     
-    
+    /**
+     * 
+     */
     public void init() {
-        init(null,null)
+        init(null,null,null)
     }
     
     /**
@@ -111,7 +163,7 @@ public class DSLEngine  {
      * @param configFile
      * @param configEnv
      */
-    public void init(String configFile, String configEnv) {
+    public void init(String configFile, String configEnv, String scriptDir) {
         if(!configEnv) {
             configEnv = "development"
         }
@@ -126,9 +178,27 @@ public class DSLEngine  {
         
         dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURL())
         
+        if(scriptDir) {
+            scriptsHome = scriptDir
+        }
+        else {
+            scriptsHome = dslConfig.dsl.scripts
+        }
+        
         //enable inheritance for ExpandoMetaClass
         if(dslConfig.dsl.emcInheritance) {
             ExpandoMetaClass.enableGlobally()
+        }
+    }
+    
+    /**
+     * 
+     * @param p
+     * @return
+     */
+    def run( Pattern p ) {
+        new File(scriptsHome).eachFileMatch(p) { File f ->
+            run(f.name)
         }
     }
 
@@ -138,12 +208,16 @@ public class DSLEngine  {
      * @return
      */
     def run(String scriptName) {
+        assert scriptsHome, "use config file or -d in command line to define the home of your scipts"
+        
+        //last minute initialisation of GroovyScriptEngine
         if(!gse) {
-            gse = new GroovyScriptEngine( dslConfig.dsl.scripts, "conf" )
+            gse = new GroovyScriptEngine( scriptsHome, "conf" )
         }
         
         def script = gse.createScript(scriptName, context)
         script.metaClass = createEMC( script.class, getEMCClosure() )
+        
         if(dslConfig.dsl.categories) {
             use(dslConfig.dsl.categories) { script.run() }
         }
@@ -151,7 +225,8 @@ public class DSLEngine  {
             script.run()
         }
     }
-    
+
+
     /**
      * 
      * @param cl
@@ -170,8 +245,14 @@ public class DSLEngine  {
             cl()
         }
     }
- 
-    
+
+
+    /**
+     * 
+     * @param clazz
+     * @param cl
+     * @return
+     */
     private ExpandoMetaClass createEMC(Class clazz, Closure cl) {
         ExpandoMetaClass emc = new ExpandoMetaClass(clazz, false)
         
@@ -181,7 +262,11 @@ public class DSLEngine  {
         return emc
     }
 
-    
+    /**
+     * 
+     * @param config
+     * @return
+     */
     private Class getDelegateClazz(config) {
         if( config instanceof Class ) {
             return config
@@ -222,7 +307,7 @@ public class DSLEngine  {
     
     
     /**
-     * Converts alias declaration to a more usable format
+     * Converts user-friendly alias declaration to a usable format
      * 
      * @param dslKey
      * @param aliasMap
@@ -260,8 +345,9 @@ public class DSLEngine  {
     
 
     /**
+     * Injects a number of properties and methods into the delegate clazz
      * 
-     * @param clazz
+     * @param clazz the delegate class
      */
     private void enhanceDelegateByConvention(Class clazz) {
         //Convention: Inject 'context' property in delegate class
@@ -281,10 +367,7 @@ public class DSLEngine  {
                 if(methods) {
                     assert 1 == methods.size(), "Ambiguous method list found for aliasing '${name}' to '${alias}'"
                     
-                    //TODO: dynamically register this alias method, but the code bellow has glitches
-                    //delegate.metaClass."$name" = { Object[] varArgs ->
-                    //    methods[0].invoke(delegate, args)
-                    //}
+                    //TODO: dynamically register this alias method so next time no methodMissing is thrown
 
                     //Set the value of dslAlias property for the time of the method call only
                     injectedAliases[delegate.class] = name
@@ -316,7 +399,7 @@ public class DSLEngine  {
     }
 
     /**
-     * Returns a closure which calls processClosure() method of the delegate class to process
+     * Returns a closure which calls processClosure() method of the delegate class to execute
      * the closure defined in the DSL script
      * 
      * @param clazz the delegate class
@@ -327,7 +410,7 @@ public class DSLEngine  {
             assert args, "Arguments of closure in DSL must not be empty"
             def l = args.length
 
-            assert (args[l-1] instanceof Closure), "Last argument of closrue must be closure"
+            assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
             Closure cl = (Closure)args[l-1]
 
             if(l==1) {
@@ -349,12 +432,12 @@ public class DSLEngine  {
     private Closure getDelegateClosure(Class clazz) {
         return { Object[] args ->
             assert args, "Arguments of closure in DSL must not be empty"
-
             def l = args.length
 
-            assert (args[l-1] instanceof Closure), "Last argument of closrue must be closure"
+            assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
             Closure cl = (Closure)args[l-1]
 
+            //If sharedInstance was defined for this clazz there could be already an instance
             def delegateInstance = delegatesMap[clazz]
 
             if(delegateInstance) {
@@ -378,7 +461,8 @@ public class DSLEngine  {
                     delegatesMap[clazz] = cl.delegate
                 }
             }
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
+            //cl.resolveStrategy = Closure.DELEGATE_FIRST
+            cl.resolveStrategy = Closure.OWNER_FIRST
             cl()
             return cl.delegate
         }
@@ -400,15 +484,18 @@ public class DSLEngine  {
             dslConfig.dsl?.evaluate.each { evalMethod ->
                 log.fine("Adding evaluate methods to ECM: $evalMethod")
                 
-            	emc."$evalMethod" = { String file -> run(file) }
-            	emc."$evalMethod" = { Closure cl -> run(cl) }
+                emc."$evalMethod" = { String file -> run(file) }
+                emc."$evalMethod" = { Closure cl -> run(cl) }
+            	//emc."$evalMethod" = { String optional, String file -> run(file) }
+            	//emc."$evalMethod" = { String optional, Closure cl -> run(cl) }
             }
             
             dslConfig.dsl?.delegates.each { delegateConfig ->
                 def clazz   = getDelegateClazz(delegateConfig)
                 def dslKey  = getDelegateDslKey(delegateConfig)
                 def methods = [dslKey]
-                
+
+                //If the delegate class has the aliases property, make this names available to missingMethod()
                 if(clazz.metaClass.properties.find{it.name=="aliases"} && clazz.aliases) {
                     convertAliasDefinition( dslKey, clazz.aliases )
                 }
@@ -430,7 +517,7 @@ public class DSLEngine  {
                     }
                 }
                 else {
-                    //Convention: the closure is executed, and all unknown methods are delegated to the object of clazz
+                    //Convention: the closure is executed, and all unknown methods are delegated to the delegate instance
                     methods.each { method ->
                         emc."$method" = getDelegateClosure(clazz)
                     }

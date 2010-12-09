@@ -3,7 +3,8 @@ objectKeys = [(org.beedom.dslforge.test.beans.User)  : "kind",
 
 def contactSchema = metaBuilder.define {
     contact(factory: org.beedom.dslforge.test.beans.Contact) {
-        properties { purpose()
+        properties {
+            purpose()
         }
     }
 }
