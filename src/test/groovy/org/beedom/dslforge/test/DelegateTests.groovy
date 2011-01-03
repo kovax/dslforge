@@ -9,8 +9,6 @@ import org.beedom.dslforge.DSLEngine;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.thoughtworks.selenium.DefaultSelenium;
-
 class DelegateTests extends TestBase {
 
     @Before
