@@ -67,6 +67,15 @@ In this example the delegate class for the "feature" term will be constructed tw
 
 It is based on CliBuilder ...
 
+9. Default delegate can be specified in the config file for Scripts (NO support of Closures at the moment)
+
+Add the delegate class to dsl.defaultDelegate like this:
+
+dsl.defaultDelegate = org.beedom.dslforge.test.delegates.FeatureDelegate
+
+DSLEngine will automatically extend the sript with the dslKey of the delegate class. This is usefull as it can make the DSL script more concise, like there is only one deleget class for the given DSL or the  ...
+
+
 Future work
 
 Well, it very much depends on the feedback I hope to get from all of you. I will certainly use it for my future projects, so I am going to add features that I need. I think some nice DSL aware error handling could be very useful, specially with localisation support. Also I would be interested in developing an eclipse editor which can take the content of delegate classes to provide code completion and syntax highlight. A Grails plugin can be done, although a lot of testing is needed to check if many instances if the same DSL script can be run at the same time.
