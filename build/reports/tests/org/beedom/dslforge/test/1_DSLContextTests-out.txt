@@ -1,4 +1,0 @@
-login - customer
-login - id:test@d1272911644598d.com pwd:hellobaby
-logout - customer
-

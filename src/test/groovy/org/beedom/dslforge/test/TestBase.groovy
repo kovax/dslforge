@@ -2,14 +2,14 @@ package org.beedom.dslforge.test
 
 import org.beedom.dslforge.DSLEngine
 
-
 import groovy.lang.Binding
 
 import org.junit.Before
 
+
 class TestBase {
 
-	def dsle
+	DSLEngine dsle
 	def context
     def timeStamp
 

@@ -4,10 +4,8 @@
 	<classpathentry kind="src" path="src/test/groovy"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
-	<classpathentry kind="lib" path="lib/groovytools-builder-1.1.6.jar"/>
-	<classpathentry kind="lib" path="lib/selenium-java-client-driver-1.0.1.jar"/>
-	<classpathentry kind="lib" path="lib/selenium-server-1.0.3.jar"/>
-	<classpathentry kind="lib" path="lib/commons-cli-1.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
+	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?ivyXmlPath=ivy.xml&amp;confs=*"/>
+	<classpathentry kind="lib" path="/home/kovax/groovytools/lib/groovytools-builder-1.1.6.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

@@ -9,22 +9,27 @@ class FeatureDelegate {
     def static dslKey = "feature"
 
     static sharedInstance
-    
     def nesting = 0
-    def featureDesc
+
+    String name = ""
+    String description = ""
     
 	public FeatureDelegate() {
+        init(null)
     }
 
     public FeatureDelegate(String desc) {
         println "FeatureDelegate()"
+        
         init(desc)
     }
     
     def init(String desc) {
-        featureDesc = desc
+        if(desc) {
+            description = desc
+        }
         nesting++
-        println "FeatureDelegate.init(): $featureDesc $nesting."
+        println "FeatureDelegate.init(): $description $nesting."
     }
     
     def destroy() {
@@ -32,8 +37,8 @@ class FeatureDelegate {
     }
 
     def doThisAlways(String method, String desc, Closure cl ) {
-        if(dslAlias) println "$dslAlias($method) $featureDesc - $desc"
-        else println "$method $featureDesc - $desc"
+        if(dslAlias) println "Feature '$description': $dslAlias($method) - $desc"
+        else println "Feature '$description': $method - $desc"
 
         if(cl && !context.dryRunScenario) {
             cl()

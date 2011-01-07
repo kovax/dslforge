@@ -72,7 +72,7 @@ public class DSLEngine  {
         this.context = context
         init(configFile,configEnv, null)
     }
- 
+
     /**
      * 
      * @param configFile
@@ -96,7 +96,7 @@ public class DSLEngine  {
      */
     public static void main(String[] args) {
         
-        def cli = new CliBuilder(usage: 'dslengine -[chfe] [file/directory name/pattern]')
+        def cli = new CliBuilder(usage: 'dslengine -[chedp] [file/directory name/pattern]')
 
         cli.with {
             h longOpt: 'help', 'Show usage information'
@@ -104,11 +104,11 @@ public class DSLEngine  {
             e longOpt: 'config-env',  args: 1, argName: 'confEnv', 'Configuration environment'
             d longOpt: 'script-dir',  args: 1, argName: 'scriptDir', 'Script root directory'
             p longOpt: 'pattern',     args: 1, argName: 'pattern', 'File pattern'
-            //q longOpt: 'paralell', 'Paralell execution'
         }
 
         def options = cli.parse(args)
         if (!options) {
+            cli.usage()
             return
         }
 
@@ -147,7 +147,7 @@ public class DSLEngine  {
         }
 
         if(arguments) {
-            options.arguments().each{ dse.run(it) }
+            arguments.each { file-> dse.run(file) }
         }
     }
     
@@ -176,7 +176,9 @@ public class DSLEngine  {
             context = new Binding()
         }
         
-        dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURL())
+        dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURI().toURL())
+
+        log.fine("DSL config was loaded: "+dslConfig.dump())
         
         if(scriptDir) {
             scriptsHome = scriptDir
@@ -203,36 +205,59 @@ public class DSLEngine  {
     }
 
     /**
+     * Run script by enhancing it with EMC instance
      * 
-     * @param scriptName
-     * @return
+     * @param scriptName the name of the script file to be run
+     * @return returns the Object which is returned by the script
      */
     def run(String scriptName) {
         assert scriptsHome, "use config file or -d in command line to define the home of your scipts"
-        
-        //last minute initialisation of GroovyScriptEngine
-        if(!gse) {
-            gse = new GroovyScriptEngine( scriptsHome, "conf" )
-        }
-        
-        def script = gse.createScript(scriptName, context)
-        script.metaClass = createEMC( script.class, getEMCClosure() )
-        
-        if(dslConfig.dsl.categories) {
-            use(dslConfig.dsl.categories) { script.run() }
+
+        if(dslConfig.dsl.defaultDelegate) {
+            String dslKey = getDelegateDslKey( dslConfig.dsl.defaultDelegate );
+
+            if(dslKey) {
+                log.info( "Try to enhance the script with the dslKey: '$dslKey'" )
+
+                //TODO: modify original Script object using GroovyScriptEngine and GroovyClassLoader.parse()
+                String t = new File(scriptsHome+"/"+scriptName).text
+
+                //wraps the script with a Closure containing the default dslKey
+                return run( new GroovyShell().evaluate( "{->${dslKey} {${t}}}" ) )
+            }
+            else {
+                throw new MissingPropertyException("No dslKey was found for class:" + dslConfig.dsl.defaultDelegate)
+            }
         }
         else {
-            script.run()
+            //last minute initialisation of GroovyScriptEngine
+            if(!gse) {
+                gse = new GroovyScriptEngine( scriptsHome, "conf" )
+            }
+            def script = gse.createScript(scriptName, context)
+
+            script.metaClass = createEMC( script.class, getEMCClosure() )
+
+            if(dslConfig.dsl.categories) {
+                use(dslConfig.dsl.categories) { script.run() }
+            }
+            else {
+                script.run()
+            }
         }
+
     }
 
 
     /**
+     * Run closure by enhancing it with EMC instance
      * 
-     * @param cl
-     * @return
+     * @param cl the Closure to be run
+     * @return returns the Object which is returned by the script
      */
     def run(Closure cl) {
+        log.info "run(Closure cl) "
+
         cl.metaClass = createEMC( cl.class, getEMCClosure() )
 
         cl.delegate = context
@@ -251,7 +276,7 @@ public class DSLEngine  {
      * 
      * @param clazz
      * @param cl
-     * @return
+     * @return the ExpandoMetaClass 
      */
     private ExpandoMetaClass createEMC(Class clazz, Closure cl) {
         ExpandoMetaClass emc = new ExpandoMetaClass(clazz, false)
@@ -307,7 +332,7 @@ public class DSLEngine  {
     
     
     /**
-     * Converts user-friendly alias declaration to a usable format
+     * Converts user-friendly alias declaration to a format usable by this class
      * 
      * @param dslKey
      * @param aliasMap
@@ -345,7 +370,7 @@ public class DSLEngine  {
     
 
     /**
-     * Injects a number of properties and methods into the delegate clazz
+     * Injects a number of properties and methods into the delegate class
      * 
      * @param clazz the delegate class
      */
@@ -437,7 +462,7 @@ public class DSLEngine  {
             assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
             Closure cl = (Closure)args[l-1]
 
-            //If sharedInstance was defined for this clazz there could be already an instance
+            //if sharedInstance was defined for class there could be already an instance
             def delegateInstance = delegatesMap[clazz]
 
             if(delegateInstance) {
@@ -461,10 +486,24 @@ public class DSLEngine  {
                     delegatesMap[clazz] = cl.delegate
                 }
             }
-            //cl.resolveStrategy = Closure.DELEGATE_FIRST
-            cl.resolveStrategy = Closure.OWNER_FIRST
+            cl.resolveStrategy = Closure.DELEGATE_FIRST
+            //cl.resolveStrategy = Closure.OWNER_FIRST
             cl()
             return cl.delegate
+        }
+    }
+    
+    /*
+     * 
+     */
+    private Closure getMethodClosure(Class clazz) {
+        if(clazz.metaClass.methods.find {it.name == "processClosure"}) {
+            //Convention: delegate class have processClosure() method to processes the content of the closure
+            return getProcessClosure(clazz)
+        }
+        else {
+            //Convention: the closure is executed, and all unknown methods are delegated to the delegate instance
+            return getDelegateClosure(clazz)
         }
     }
 
@@ -474,23 +513,24 @@ public class DSLEngine  {
      */
     private Closure getEMCClosure() {
         return { ExpandoMetaClass emc ->
-            //TODO: implement convention to discover classes by looking for Delegate in their names, 
-            //or listing classes in delegates source directory
+            //TODO: implement convention to discover classes by looking for Delegate in their names, or listing classes in delegates source directory
             if(!dslConfig.dsl.delegates) {
                 log.warning("NO delegate class was specified in DSL Config file")
             }
 
             //Add these methods in case the DSL needs to support evaluate/include
             dslConfig.dsl?.evaluate.each { evalMethod ->
+                
                 log.fine("Adding evaluate methods to ECM: $evalMethod")
                 
                 emc."$evalMethod" = { String file -> run(file) }
                 emc."$evalMethod" = { Closure cl -> run(cl) }
-            	//emc."$evalMethod" = { String optional, String file -> run(file) }
-            	//emc."$evalMethod" = { String optional, Closure cl -> run(cl) }
             }
             
             dslConfig.dsl?.delegates.each { delegateConfig ->
+                
+                log.fine("dslConfig.dsl.delegates.each: $delegateConfig")
+                
                 def clazz   = getDelegateClazz(delegateConfig)
                 def dslKey  = getDelegateDslKey(delegateConfig)
                 def methods = [dslKey]
@@ -506,21 +546,12 @@ public class DSLEngine  {
                 }
                 
                 log.fine("ECM method names including aliases: $methods")
-                println "ECM method names including aliases: $methods"
                 
                 enhanceDelegateByConvention(clazz)
 
-                if(clazz.metaClass.methods.find {it.name == "processClosure"}) {
-                    //Convention: delegate class have processClosure() method to processes the content of the closure
-                    methods.each { method ->
-                        emc."$method" = getProcessClosure(clazz)
-                    }
-                }
-                else {
-                    //Convention: the closure is executed, and all unknown methods are delegated to the delegate instance
-                    methods.each { method ->
-                        emc."$method" = getDelegateClosure(clazz)
-                    }
+                //Adds method to ECM which instantiates the delegates and runs the closure pseed as input parameter
+                methods.each { method ->
+                    emc."$method" = getMethodClosure(clazz)
                 }
             }
         }

@@ -1,5 +1,5 @@
 def timeStamp = System.currentTimeMillis()
-assert junit == "junit4"
+//assert junit == "junit4"
 
 define {
     user {
