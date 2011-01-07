@@ -30,7 +30,7 @@ task('execdsl', dependsOn: 'testClasses', type: JavaExec) {
 
 /*
 task('dsl', dependsOn: 'testlasses', type: DefaultTask) {
-    ant.taskdef(name: 'dsle', classname: 'org.beedom.dslforge.DSLEngineTask', classpath: sourceSets.test.runtimeClasspath.asPath)
+    ant.taskdef(name: 'dsle', classname: 'org.beedom.dslforge.DSLEngineAntTask', classpath: sourceSets.test.runtimeClasspath.asPath)
     ant.dsle()
     println sourceSets.main.runtimeClasspath.asPath
 }
