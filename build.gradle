@@ -1,4 +1,4 @@
-usePlugin 'groovy'
+apply plugin: 'groovy'
 
 version = '1.0'
 mainClass = 'org.beedom.dslforge.DSLEngine'
@@ -8,13 +8,30 @@ manifest.mainAttributes("Implementation-Title": "DSLForge", "Implementation-Vers
 repositories {
     mavenCentral()
     flatDir name: 'localRepository', dirs: 'lib'
+    flatDir name: 'groovytools', dirs: '/home/kovax/groovytools/lib'
 }
 
 dependencies {
-    groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.0'
+    groovy group: 'org.codehaus.groovy', name: 'groovy', version: '1.7.6'
     compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
+    compile group: 'org.apache.ant', name: 'ant', version: '1.7.+'
     testCompile group: 'groovytools-builder', name: 'groovytools-builder', version: '1.1.6'
-    testCompile group: 'selenium-java-client-driver', name: 'selenium-java-client-driver', version: '1.0.1'
-    testCompile group: 'selenium-server', name: 'selenium-server', version: '1.0.3'
-    testCompile group: 'junit', name: 'junit', version: '4.7'
+    testCompile group: 'org.seleniumhq.selenium.client-drivers', name: 'selenium-java-client-driver', version: '1.0.1'
+    testCompile group: 'org.seleniumhq.selenium', name: 'selenium-server', version: '2.0a7'
+    testCompile group: 'junit', name: 'junit', version: '4.+'
 }
+
+
+task('execdsl', dependsOn: 'testClasses', type: JavaExec) {
+    main = 'org.beedom.dslforge.DSLEngine'
+    classpath = sourceSets.test.runtimeClasspath
+    args 'AllFuntionalityScript.groovy'
+}
+
+/*
+task('dsl', dependsOn: 'testlasses', type: DefaultTask) {
+    ant.taskdef(name: 'dsle', classname: 'org.beedom.dslforge.DSLEngineTask', classpath: sourceSets.test.runtimeClasspath.asPath)
+    ant.dsle()
+    println sourceSets.main.runtimeClasspath.asPath
+}
+*/
