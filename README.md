@@ -13,7 +13,8 @@ neat way of separating concerns, so I have generalised it a bit further, I have 
 by Grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
 
 
-### Configuration entry to specify Delegate classes
+Configuration entry to specify Delegate classes
+-----------------------------------------------
 
 Add the `[dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium]` specification to the dls.delegates 
 entry (it expects a list of classes or maps) in the config file, and you can execute the following script:
@@ -40,13 +41,15 @@ Also check [DelegateTests](https://github.com/kovax/dslforge/blob/master/src/tes
 to see that Groovy handles nesting delegates very nicely.
 
 
-### The DSL can be executed as a groovy Script or Closure
+The DSL can be executed as a groovy Script or Closure
+-----------------------------------------------------
 
 The DSLEngine has 2 run() methods, one takes a name of the script file and the other takes a Closure. Both updates
 the DSL instances with the enhanced EMC.
 
 
-### The execution context (or binding) of the DSL is injected into each delegate class
+The execution context (or binding) of the DSL is injected into each delegate class
+----------------------------------------------------------------------------------
 
 The variable called context, instance of the Binding class, is injected into each delegate class. The DSLEngine 
 can be initialised with an existing Binding instance, so you have all the possible ways to share data between 
@@ -57,7 +60,8 @@ Check the [DSLContextTests](https://github.com/kovax/dslforge/blob/master/src/te
 from more details.
 
 
-### Configuration entry to specify Category classes
+Configuration entry to specify Category classes
+-----------------------------------------------
 
 The dsl.categories entry in the config file can specify a list of Category classes, and the DLSEngine will execute
 the Script or Closure within the closure of use(categories) method call. 
@@ -65,7 +69,8 @@ Check [DecoratorTests](https://github.com/kovax/dslforge/blob/master/src/test/gr
 for more details.
 
 
-### Method aliases in delegate classes
+Method aliases in delegate classes
+----------------------------------
 
 Each delegate class may have a static aliases property, which holds a map, in which you can specify the list of aliases
 for any methods that the delegate is implemeneting. This way it is easy to implement the same DSL in different languages
@@ -74,7 +79,8 @@ Check [DelegateTests](https://github.com/kovax/dslforge/blob/master/src/test/gro
 for more details. 
 
 
-### EMC method calls processClosure(closure) of the delegate class
+EMC method calls processClosure(closure) of the delegate class
+--------------------------------------------------------------
 
 If you require to take the full control on how the closure is executed in your DSL implementation, you can define
 the `processClosure(Closure)` method in your delegate class. DSLEngine looks for that methods in the delegate class,
@@ -102,7 +108,8 @@ objectKeys, and using the [BindingConvention](https://github.com/kovax/dslforge/
 it adds the customer property of User class to the context.
 
 
-### Nested calls of the same DSL keyword can be handled by the same delegate instance
+Nested calls of the same DSL keyword can be handled by the same delegate instance
+---------------------------------------------------------------------------------
 
     feature "Feature 1", {
         in_order "principle 1"
@@ -118,12 +125,14 @@ of the delegate class, and retrieves it for the second "feature", and calls its 
 its constructor.
 
 
-### DSLEngine has a main() to support execution from a command line
+DSLEngine has a main() to support execution from a command line
+---------------------------------------------------------------
 
 It is based on CliBuilder ...
 
 
-### Default delegate can be specified in the config file
+Default delegate can be specified in the config file
+----------------------------------------------------
 
 Add the delegate class to dsl.defaultDelegate like this:
 
@@ -134,7 +143,8 @@ the DSL script more concise, like there is only one deleget class for the given 
 
 **Default delegate only works for Scripts i.e. NO support for Closures YET**
 
-### Future work
+Future work
+----------------------------------------------------------------
 
 Well, it very much depends on the feedback I hope to get from all of you. I will certainly use it for my future
 projects, so I am going to add features that I need. I think some nice DSL aware error handling could be very useful, 
