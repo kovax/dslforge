@@ -141,7 +141,7 @@ Add the delegate class to dsl.defaultDelegate like this:
 DSLEngine will automatically extend the sript with the dslKey of the delegate class. This is usefull as it can make
 the DSL script more concise, like there is only one deleget class for the given DSL or the  ...
 
-**Default delegate only works for Scripts i.e. NO support for Closures YET**
+**IMPORTANT: Default delegate only works for Scripts i.e. NO support for Closures YET!!!**
 
 Future work
 ----------------------------------------------------------------
