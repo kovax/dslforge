@@ -1,5 +1,5 @@
-objectKeys = [(org.beedom.dslforge.test.beans.User)  : "kind",
-              (org.beedom.dslforge.test.beans.Basket): {b-> "basket${b.title}"}]
+mbObjectKeys = [(org.beedom.dslforge.test.beans.User)  : "kind",
+                (org.beedom.dslforge.test.beans.Basket): {b-> "basket${b.title}"}]
 
 def contactSchema = metaBuilder.define {
     contact(factory: org.beedom.dslforge.test.beans.Contact) {

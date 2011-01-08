@@ -191,6 +191,10 @@ public class DSLEngine  {
         if(dslConfig.dsl.emcInheritance) {
             ExpandoMetaClass.enableGlobally()
         }
+        
+        if( dslConfig.dsl.mbSchemaFiles ) {
+            context.mbSchemaFiles = dslConfig.dsl.mbSchemaFiles
+        }
     }
     
     /**
@@ -216,18 +220,13 @@ public class DSLEngine  {
         if(dslConfig.dsl.defaultDelegate) {
             String dslKey = getDelegateDslKey( dslConfig.dsl.defaultDelegate );
 
-            if(dslKey) {
-                log.info( "Try to enhance the script with the dslKey: '$dslKey'" )
+            log.info( "Try to enhance the script with the dslKey: '$dslKey'" )
 
-                //TODO: modify original Script object using GroovyScriptEngine and GroovyClassLoader.parse()
-                String t = new File(scriptsHome+"/"+scriptName).text
+            //TODO: modify original Script object using GroovyScriptEngine and GroovyClassLoader.parse()
+            String t = new File(scriptsHome+"/"+scriptName).text
 
-                //wraps the script with a Closure containing the default dslKey
-                return run( new GroovyShell().evaluate( "{->${dslKey} {${t}}}" ) )
-            }
-            else {
-                throw new MissingPropertyException("No dslKey was found for class:" + dslConfig.dsl.defaultDelegate)
-            }
+            //wraps the script with a Closure containing the default dslKey
+            return run( new GroovyShell().evaluate( "{->${dslKey} {${t}}}" ) )
         }
         else {
             //last minute initialisation of GroovyScriptEngine

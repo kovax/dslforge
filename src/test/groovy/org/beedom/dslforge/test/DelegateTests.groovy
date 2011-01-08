@@ -11,12 +11,6 @@ import org.junit.Test;
 
 class DelegateTests extends TestBase {
 
-    @Before
-    public void init() {
-        dsle = new DSLEngine((Binding)context, "src/test/conf/DelegateTestConfig.groovy", "development")
-    	super.init()
-    }
-    
     @Test
     public void nestedDelegates() {
         dsle.run {
