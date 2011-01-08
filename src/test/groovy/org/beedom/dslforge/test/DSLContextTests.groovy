@@ -8,7 +8,7 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 class DSLContextTests {
-    
+
     def timeStamp
     def context
     def dsle
@@ -21,26 +21,26 @@ class DSLContextTests {
     }
 
 
-	@Test
-	public void testContextShare() {
-		context.junit = "junit"
+    @Test
+    public void testContextShare() {
+        context.junit = "junit"
 
-		dsle.run {
-		    assert junit == "junit"
-		    var = "kovax"
-		}
-		
-		try {
-	        assert var
-	        fail("Shall throw MissingPropertyException")
-		}
-		catch(MissingPropertyException mpe) {
-		}
-		
-		assert context.var == "kovax"
-	}
+        dsle.run {
+            assert junit == "junit"
+            var = "kovax"
+        }
 
-	@Test
+        try {
+            assert var
+            fail("Shall throw MissingPropertyException")
+        }
+        catch(MissingPropertyException mpe) {
+        }
+
+        assert context.var == "kovax"
+    }
+
+    @Test
     public void testContextUpdateByDSL() {
         dsle.run {
             define {
@@ -76,12 +76,12 @@ class DSLContextTests {
 
             webshop {
                 login customer
-                
+
                 //Logout implementation updates the customer.firstName
                 logout customer
             }
         }
-        
+
         assert context.customer.firstName == "logged out customer"
     }
 }
