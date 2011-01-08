@@ -41,17 +41,19 @@ Also check [DelegateTests](https://github.com/kovax/dslforge/blob/master/src/tes
 to see that Groovy handles nesting delegates very nicely.
 
 
-The DSL can be executed as a groovy Script or Closure
+The DSL can be executed as a Script or Closure
 -----------------------------------------------------
 
-The DSLEngine has 2 run() methods, one takes a name of the script file and the other takes a Closure. Both updates
-the DSL instances with the enhanced EMC.
+[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+has 2 run() methods, `def run(String scriptName)` takes a name of the script file and `def run(Closure cl)` takes
+a Closure. Both updates the instances with the enhanced EMC.
 
 
-The execution context (or binding) of the DSL is injected into each delegate class
-----------------------------------------------------------------------------------
+The execution context/binding of the DSL is injected into each delegate class
+-----------------------------------------------------------------------------
 
-The variable called context, instance of the Binding class, is injected into each delegate class. The DSLEngine 
+The variable called context, instance of the Binding class, is injected into each delegate class. 
+[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 can be initialised with an existing Binding instance, so you have all the possible ways to share data between 
 different parts of the execution environment. As you very likely know Binding is used in the Script class by default, 
 so to support context sharing in Closures the DSLEngine assign its context property to the delegate field of Closure
@@ -64,7 +66,7 @@ Configuration entry to specify Category classes
 -----------------------------------------------
 
 The dsl.categories entry in the config file can specify a list of Category classes, and the DLSEngine will execute
-the Script or Closure within the closure of use(categories) method call. 
+the Script or Closure within the closure of `use(categories)` method.
 Check [DecoratorTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DecoratorTests.groovy)
 for more details.
 
@@ -83,7 +85,9 @@ EMC method calls processClosure(closure) of the delegate class
 --------------------------------------------------------------
 
 If you require to take the full control on how the closure is executed in your DSL implementation, you can define
-the `processClosure(Closure)` method in your delegate class. DSLEngine looks for that methods in the delegate class,
+the `processClosure(Closure)` method in your delegate class.
+[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+looks for that methods in the delegate class,
 and if it exists, it will call it instead of setting up the delegation pattern. It was used in my functional testing
 project to setup fixture data in a very user friendly way. Consider the following DSL snippet from the AllFuntionalityScript.
 
@@ -102,7 +106,8 @@ project to setup fixture data in a very user friendly way. Consider the followin
 
 The define keyword is associated with the MetaBuilderDelegate class, which has the processClosure() method. 
 MetaBuilder provides a very flexible solution to populate POJOs, and as it can use Closure it integrates very well 
-with DSLEngine. [MetaBuilderDelegate](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/delegates/MetaBuilderDelegate.groovy) 
+with [DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy).
+[MetaBuilderDelegate](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/delegates/MetaBuilderDelegate.groovy) 
 initialise itself from a script containing the schema definition and a map called
 objectKeys, and using the [BindingConvention](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/BindingConvention.groovy)
 it adds the customer property of User class to the context.
@@ -120,26 +125,38 @@ Nested calls of the same DSL keyword can be handled by the same delegate instanc
     }
 
 In this example the delegate class for the "feature" term will be constructed twice. If you need to avoid that,
-the delegate class can define a static property called sharedInstance. In this case the DSLEngine stores the instance
-of the delegate class, and retrieves it for the second "feature", and calls its init(args) method instead of calling
-its constructor.
+the delegate class can define a static property called sharedInstance. In this case
+[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+stores the instance of the delegate class, and retrieves it for the second "feature", and calls its `init(args)` 
+method instead of calling its constructor.
 
 
-DSLEngine has a main() to support execution from a command line
----------------------------------------------------------------
+DSLEngine has main(arg) to support execution from a command line
+----------------------------------------------------------------
 
-It is based on CliBuilder ...
+It is based on CliBuilder and this is the usage:
+
+    usage: dslengine -[chedp] [file/directory name/pattern]
+     -c,--config-file <confFile>   Configuration file
+     -d,--script-dir <scriptDir>   Script root directory
+     -e,--config-env <confEnv>     Configuration environment
+     -h,--help                     Show usage information
+     -p,--pattern <pattern>        File pattern
 
 
 Default delegate can be specified in the config file
 ----------------------------------------------------
 
-Add the delegate class to dsl.defaultDelegate like this:
+Add the entry loki bellow to the DSLConfig.groovy file:
 
     dsl.defaultDelegate = org.beedom.dslforge.test.delegates.FeatureDelegate
 
-DSLEngine will automatically extend the sript with the dslKey of the delegate class. This is usefull as it can make
-the DSL script more concise, like there is only one deleget class for the given DSL or the  ...
+[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+will automatically extend the sript with the dslKey of the delegate class. This can be usefull as it makes
+the DSL script more concise in case there is only one delegate class for the given DSL or the given DSL is more complex
+having more delegates and one of them should always be used.
+Check [DefaultDelegateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DefaultDelegateTests.groovy)
+and [DefaultDelegate.feature](https://github.com/kovax/dslforge/blob/master/src/test/scripts/DefaultDelegate.feature).
 
 **IMPORTANT: Default delegate only works for Scripts i.e. NO support for Closures YET!!!**
 
