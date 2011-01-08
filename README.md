@@ -16,8 +16,10 @@ by Grails, and with the help of Groovy's fantastic MOP support, the project offe
 Configuration entry to specify Delegate classes
 -----------------------------------------------
 
-Add the `[dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium]` specification to the dls.delegates 
-entry (it expects a list of classes or maps) in the config file, and you can execute the following script:
+Add the `[dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium]` specification to the dsl.delegates 
+entry (it expects `List<Class>` or `Map<String,Class>`) in the 
+[DSL config file](https://github.com/kovax/dslforge/blob/master/src/test/conf/DelegateTestConfig.groovy),
+and you can execute the following script:
 
     selenium "localhost", 4444, "*firefox", "http://www.google.com", {
         start
@@ -35,7 +37,7 @@ in the delegate class itself.
 
 Check [SeleniumDelagateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/SeleniumDelagateTests.groovy)
 and [SeleniumDelegate.groovy](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/delegates/SeleniumDelegate.groovy)
-for more details about the different ways of integrating existing classes as delegates.
+for more details about the different ways of integrating existing classes in DSLForge.
 
 Also check [DelegateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DelegateTests.groovy)
 to see that Groovy handles nesting delegates very nicely.
@@ -147,7 +149,8 @@ It is based on CliBuilder and this is the usage:
 Default delegate can be specified in the config file
 ----------------------------------------------------
 
-Add the entry loki bellow to the DSLConfig.groovy file:
+Add the entry like bellow to the 
+[DSLConfig.groovy](https://github.com/kovax/dslforge/blob/master/src/test/conf/DefaultDelegateTestConfig.groovy) file:
 
     dsl.defaultDelegate = org.beedom.dslforge.test.delegates.FeatureDelegate
 
