@@ -25,8 +25,9 @@
         status="integration">
 	</info>
 	<dependencies>
-	   <dependency org="commons-cli" name="commons-cli" rev="1.2" />
-       <dependency org="org.seleniumhq.selenium.client-drivers" name="selenium-java-client-driver" rev="1.0.1" transitive="false" />
-       <dependency org="org.seleniumhq.selenium" name="selenium-server" rev="2.0a7" />
+        <dependency org="org.slf4j" name="slf4j-simple" rev="1.6.1"/>
+        <dependency org="commons-cli" name="commons-cli" rev="1.2" />
+        <dependency org="org.seleniumhq.selenium.client-drivers" name="selenium-java-client-driver" rev="1.0.1" transitive="false" />
+        <dependency org="org.seleniumhq.selenium" name="selenium-server" rev="2.0a7" />
     </dependencies>
 </ivy-module>

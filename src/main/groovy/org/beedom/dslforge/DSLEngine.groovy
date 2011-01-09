@@ -17,9 +17,11 @@ package org.beedom.dslforge
 
 import groovy.lang.MissingPropertyException;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.regex.Pattern
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 /**
  * 
@@ -28,7 +30,7 @@ import java.util.regex.Pattern
  */
 public class DSLEngine  {
     
-    protected static Logger log = Logger.getLogger(DSLEngine.class.getName());
+    protected static Logger log = LoggerFactory.getLogger(DSLEngine.class.getName());
     
     private ConfigObject dslConfig
     private aliases = [:]
@@ -178,7 +180,7 @@ public class DSLEngine  {
         
         dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURI().toURL())
 
-        log.fine("DSL config was loaded: "+dslConfig.dump())
+        log.info("DSL config was loaded: "+dslConfig.dump())
         
         if(scriptDir) {
             scriptsHome = scriptDir
@@ -514,13 +516,13 @@ public class DSLEngine  {
         return { ExpandoMetaClass emc ->
             //TODO: implement convention to discover classes by looking for Delegate in their names, or listing classes in delegates source directory
             if(!dslConfig.dsl.delegates) {
-                log.warning("NO delegate class was specified in DSL Config file")
+                log.warn("NO delegate class was specified in DSL Config file")
             }
 
             //Add these methods in case the DSL needs to support evaluate/include
             dslConfig.dsl?.evaluate.each { evalMethod ->
                 
-                log.fine("Adding evaluate methods to ECM: $evalMethod")
+                log.info("Adding evaluate methods to ECM: $evalMethod")
                 
                 emc."$evalMethod" = { String file -> run(file) }
                 emc."$evalMethod" = { Closure cl -> run(cl) }
@@ -528,7 +530,7 @@ public class DSLEngine  {
             
             dslConfig.dsl?.delegates.each { delegateConfig ->
                 
-                log.fine("dslConfig.dsl.delegates.each: $delegateConfig")
+                log.info("dslConfig.dsl.delegates.each: $delegateConfig")
                 
                 def clazz   = getDelegateClazz(delegateConfig)
                 def dslKey  = getDelegateDslKey(delegateConfig)
@@ -544,7 +546,7 @@ public class DSLEngine  {
                     methods += aliases[dslKey]
                 }
                 
-                log.fine("ECM method names including aliases: $methods")
+                log.info("ECM method names including aliases: $methods")
                 
                 enhanceDelegateByConvention(clazz)
 

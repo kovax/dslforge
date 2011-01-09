@@ -1,11 +1,26 @@
-<?xml version="1.0" encoding="UTF-8"?>
 <classpath>
-	<classpathentry kind="src" path="src/main/groovy"/>
-	<classpathentry kind="src" path="src/test/groovy"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
-	<classpathentry exported="true" kind="con" path="GROOVY_SUPPORT"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.junit.JUNIT_CONTAINER/4"/>
-	<classpathentry kind="con" path="org.apache.ivyde.eclipse.cpcontainer.IVYDE_CONTAINER/?ivyXmlPath=ivy.xml&amp;confs=*"/>
-	<classpathentry kind="lib" path="/home/kovax/groovytools/lib/groovytools-builder-1.1.6.jar"/>
-	<classpathentry kind="output" path="bin"/>
+  <classpathentry kind="output" path="build/classes/main"/>
+  <classpathentry output="build/classes/main" kind="src" path="src/main/groovy"/>
+  <classpathentry output="build/classes/test" kind="src" path="src/test/groovy"/>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/asm/asm-util/jars/asm-util-3.2.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/org.apache.ant/ant/jars/ant-1.7.1.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/commons-logging/commons-logging/sources/commons-logging-1.1.1-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/commons-logging/commons-logging/jars/commons-logging-1.1.1.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/junit/junit/sources/junit-4.8.2-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/junit/junit/jars/junit-4.8.2.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.seleniumhq.selenium/selenium-common/sources/selenium-common-2.0a7-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.seleniumhq.selenium/selenium-common/jars/selenium-common-2.0a7.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/org.apache.ant/ant-launcher/jars/ant-launcher-1.7.1.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/asm/asm-commons/jars/asm-commons-3.2.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.codehaus.groovy/groovy/sources/groovy-1.7.6-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.codehaus.groovy/groovy/jars/groovy-1.7.6.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.6.1-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.6.1.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.seleniumhq.selenium/selenium-remote-common/sources/selenium-remote-common-2.0a7-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.seleniumhq.selenium/selenium-remote-common/jars/selenium-remote-common-2.0a7.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/antlr/antlr/jars/antlr-2.7.7.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/asm/asm-analysis/jars/asm-analysis-3.2.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/groovytools/lib/groovytools-builder-1.1.6.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/asm/asm/jars/asm-3.2.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/commons-cli/commons-cli/sources/commons-cli-1.2-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/commons-cli/commons-cli/jars/commons-cli-1.2.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.seleniumhq.selenium/selenium-server/sources/selenium-server-2.0a7-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.seleniumhq.selenium/selenium-server/jars/selenium-server-2.0a7.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.seleniumhq.selenium.client-drivers/selenium-java-client-driver/sources/selenium-java-client-driver-1.0.1-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.seleniumhq.selenium.client-drivers/selenium-java-client-driver/jars/selenium-java-client-driver-1.0.1.jar" exported="true"/>
+  <classpathentry kind="lib" path="/home/kovax/.gradle/cache/asm/asm-tree/jars/asm-tree-3.2.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.mortbay.jetty/servlet-api-2.5/sources/servlet-api-2.5-6.1.9-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.mortbay.jetty/servlet-api-2.5/jars/servlet-api-2.5-6.1.9.jar" exported="true"/>
+  <classpathentry sourcepath="/home/kovax/.gradle/cache/org.slf4j/slf4j-simple/sources/slf4j-simple-1.6.1-sources.jar" kind="lib" path="/home/kovax/.gradle/cache/org.slf4j/slf4j-simple/jars/slf4j-simple-1.6.1.jar" exported="true"/>
 </classpath>
