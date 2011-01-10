@@ -17,9 +17,10 @@ class SeleniumDelegate {
     
     def static dslKey = "seleniumD"
 
+    //Stupid eclipse issue force this empty implementation
     def void open(String s1, String s2) {
     }
-    
+    //Stupid eclipse issue force this empty implementation
     def String getLog() {
         retrun null
     }
