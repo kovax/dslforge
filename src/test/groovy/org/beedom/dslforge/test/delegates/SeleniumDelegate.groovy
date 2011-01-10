@@ -17,5 +17,10 @@ class SeleniumDelegate {
     
     def static dslKey = "seleniumD"
 
-
+    def void open(String s1, String s2) {
+    }
+    
+    def String getLog() {
+        retrun null
+    }
 }

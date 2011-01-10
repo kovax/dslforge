@@ -23,6 +23,7 @@ dependencies {
     testCompile group: 'org.seleniumhq.selenium.client-drivers', name: 'selenium-java-client-driver', version: '1.0.1', transitive: false
     testCompile group: 'org.seleniumhq.selenium', name: 'selenium-server', version: '2.0a7', transitive: false
     testCompile group: 'org.seleniumhq.selenium', name: 'selenium-remote-common', version: '2.0a7', transitive: false
+
     testCompile 'org.seleniumhq.selenium:selenium-common:2.0a7'
     testCompile 'commons-logging:commons-logging:1.1.1'
     testCompile 'org.mortbay.jetty:servlet-api-2.5:6.1.9'
