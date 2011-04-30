@@ -128,10 +128,10 @@ public class BindingConvention {
      * @param beanKeys
      * @return
      */
-    static def bindObjectList(binding, objs, beanKeys) {
+    static def bindObjectList(binding, objects, beanKeys) {
         assert binding
         
-        for (o in objs) {
+        for (o in objects) {
             bindObject(binding, o, beanKeys[o.class])
         }
     }

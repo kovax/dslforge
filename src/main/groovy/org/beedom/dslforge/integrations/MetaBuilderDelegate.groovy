@@ -37,7 +37,7 @@ class MetaBuilderDelegate {
 	    if(!initialised) {
 	    	context.metaBuilder = new MetaBuilder()
 
-            context.mbSchemaFiles.each { fPath ->
+            context.mbSchemaFiles.each { String fPath ->
                 new GroovyShell( context ).evaluate( new File(fPath) )
             }
 	    	initialised = true

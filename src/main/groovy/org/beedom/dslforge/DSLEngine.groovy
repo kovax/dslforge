@@ -20,7 +20,8 @@ import groovy.lang.MissingPropertyException;
 import java.util.regex.Pattern
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.slf4j.LoggerFactory
+import groovy.util.logging.*;
 
 
 /**
@@ -28,9 +29,10 @@ import org.slf4j.LoggerFactory;
  * 
  * @author zs.myth
  */
+@Slf4j
 public class DSLEngine  {
     
-    protected static Logger log = LoggerFactory.getLogger(DSLEngine.class.getName());
+    //protected static Logger log = LoggerFactory.getLogger(DSLEngine.class.getName());
     
     private ConfigObject dslConfig
     private aliases = [:]
