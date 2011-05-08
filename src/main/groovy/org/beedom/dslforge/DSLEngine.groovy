@@ -31,9 +31,7 @@ import groovy.util.logging.*;
  */
 @Slf4j
 public class DSLEngine  {
-    
-    //protected static Logger log = LoggerFactory.getLogger(DSLEngine.class.getName());
-    
+
     private ConfigObject dslConfig
     private aliases = [:]
     private Binding context
@@ -215,7 +213,7 @@ public class DSLEngine  {
     /**
      * Run script by enhancing it with EMC instance
      * 
-     * @param scriptName the name of the script file to be run
+     * @param scriptName the name of the script file to be enhanced and run
      * @return returns the Object which is returned by the script
      */
     def run(String scriptName) {
@@ -255,7 +253,7 @@ public class DSLEngine  {
     /**
      * Run closure by enhancing it with EMC instance
      * 
-     * @param cl the Closure to be run
+     * @param cl the Closure to be enhanced and run
      * @return returns the Object which is returned by the script
      */
     def run(Closure cl) {
@@ -277,8 +275,8 @@ public class DSLEngine  {
 
     /**
      * 
-     * @param clazz
-     * @param cl
+     * @param clazz Script or Closure to be enhanced by the EMC
+     * @param cl Closure to configure the EMC
      * @return the ExpandoMetaClass 
      */
     private ExpandoMetaClass createEMC(Class clazz, Closure cl) {
@@ -431,7 +429,7 @@ public class DSLEngine  {
      * the closure defined in the DSL script
      * 
      * @param clazz the delegate class
-     * @return the closure
+     * @return closure to initialise the delegate instance
      */
     private Closure getProcessClosure(Class clazz) {
         return {  Object[] args ->
@@ -441,6 +439,7 @@ public class DSLEngine  {
             assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
             Closure cl = (Closure)args[l-1]
 
+            //Construct of the delegate class and call its processClosure() method
             if(l==1) {
                 return clazz.newInstance().processClosure(cl)
             }
@@ -455,7 +454,7 @@ public class DSLEngine  {
      * the missing methods to the delegate class
      * 
      * @param clazz the delegate class
-     * @return the closure
+     * @return closure to initialise the delegate instance
      */
     private Closure getDelegateClosure(Class clazz) {
         return { Object[] args ->
@@ -465,9 +464,10 @@ public class DSLEngine  {
             assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
             Closure cl = (Closure)args[l-1]
 
-            //if sharedInstance was defined for class there could be already an instance
+            //if class has a sharedInstance property the delegate could be in the map
             def delegateInstance = delegatesMap[clazz]
 
+            //sharedInstance already exists so call its init() method
             if(delegateInstance) {
                 if(l==1) {
                     delegateInstance.init()
@@ -477,6 +477,7 @@ public class DSLEngine  {
                 }
                 cl.delegate = delegateInstance
             }
+            //No sharedInstance exists so call the constructor of the delegate class
             else {
                 if(l==1) {
                     cl.delegate = clazz.newInstance()
@@ -485,19 +486,25 @@ public class DSLEngine  {
                     cl.delegate = clazz.newInstance(args[0..l-2] as Object[])
                 }
                 
+                //if class has a sharedInstance property add it to the map
                 if(clazz.metaClass.properties.find{it.name=="sharedInstance"}) {
                     delegatesMap[clazz] = cl.delegate
                 }
             }
+
             cl.resolveStrategy = Closure.DELEGATE_FIRST
-            //cl.resolveStrategy = Closure.OWNER_FIRST
             cl()
+
             return cl.delegate
         }
     }
-    
-    /*
-     * 
+
+    /**
+     * Calls the appropriate method which creates the closure to implement the method
+     * which initialise the delegate instance
+     *
+     * @param clazz the delegate class
+     * @return closure to initialise the delegate instance
      */
     private Closure getMethodClosure(Class clazz) {
         if(clazz.metaClass.methods.find {it.name == "processClosure"}) {
@@ -511,8 +518,9 @@ public class DSLEngine  {
     }
 
     /**
-     * 
-     * @return 
+     * Creates the closure to configure the EMC
+     *
+     * @return closure to configure the EMC
      */
     private Closure getEMCClosure() {
         return { ExpandoMetaClass emc ->
