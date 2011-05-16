@@ -85,6 +85,14 @@ class DelegateTests extends TestBase {
                 akkor "a kosár üres lesz"
             }
 
+            //The above translated to hungarian one more time to test registered methods
+            szenárió "Termék törlése a kosárból", {
+                adott "egy vásárló, aki azonosította magát"
+                és "a vásárló a kosarat véglegesítettete egy termékkel"
+                amikor "a vásárló törölte a terméket a kosárból"
+                akkor "a kosár üres lesz"
+            }
+
             define {
                 user {
                     kind = "customer"

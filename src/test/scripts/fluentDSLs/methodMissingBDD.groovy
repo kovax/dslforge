@@ -1,5 +1,3 @@
-featureContext = false
-
 def methodMissing(String name, args) {
     def bddMethods = ["feature","in_order","as_a","i_want","scenario", "given", "when", "then", "and", "but"]
 
@@ -8,7 +6,7 @@ def methodMissing(String name, args) {
 
         if (args.length == 1) {
             println " (map)"
-            //Makes possible to use any word before calling a closure
+            //Makes possible to use any word for calling a closure
             return [:].withDefault { key -> { cl -> cl() } }
         }
         else if (args.length == 2) {
@@ -44,7 +42,7 @@ feature "The Simplest BDD implementation ever" body {
 
         and "another dummy event"
 
-        and {
+        and { //interesting that this works
             bdd++
         }
 

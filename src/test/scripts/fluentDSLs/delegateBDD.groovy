@@ -1,4 +1,3 @@
-
 class Scenario {
     def bddMethods = ["given", "when", "then", "and", "but"]
 
@@ -16,14 +15,10 @@ class Scenario {
             else if (args.length == 2) {
                 return args[1]()
             }
-            else {
-                throw new MissingMethodException(name, this.class, args)
-            }
         }
 
         throw new MissingMethodException(name, this.class, args)
     }
-
 }
 
 
@@ -39,9 +34,6 @@ class Feature {
             }
             else if (args.length == 2) {
                 return args[1]()
-            }
-            else {
-                throw new MissingMethodException(name, this.class, args)
             }
         }
         else {

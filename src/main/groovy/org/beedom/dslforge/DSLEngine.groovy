@@ -387,13 +387,23 @@ public class DSLEngine  {
             def alias = findAlias(delegate, name)
 
             if(alias) {
+                //collect types for method arguments & find method with the same signature
                 def types = args.collect {it.class} as Object[]
                 def methods = delegate.metaClass.respondsTo(delegate.class, alias, types)
 
                 if(methods) {
                     assert 1 == methods.size(), "Ambiguous method list found for aliasing '${name}' to '${alias}'"
                     
-                    //TODO: dynamically register this alias method so next time no methodMissing is thrown
+                    //dynamically register this alias method so next time no methodMissing is thrown
+                    clazz.metaClass."$name" = { Object[] varArgs ->
+                        log.info("Registered alias: $name ")
+
+                        //Set the value of dslAlias property for the time of the method call only
+                        injectedAliases[delegate.class] = name
+                        def returns = methods[0].invoke(delegate, args)
+                        injectedAliases[delegate.class] = null
+                        return returns
+                    }
 
                     //Set the value of dslAlias property for the time of the method call only
                     injectedAliases[delegate.class] = name
