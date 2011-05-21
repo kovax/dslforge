@@ -111,6 +111,7 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="groovy-1.8.0" level="application" />
+    <orderEntry type="library" name="openCSV" level="project" />
   </component>
 </module>
 
