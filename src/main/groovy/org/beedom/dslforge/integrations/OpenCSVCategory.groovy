@@ -97,6 +97,7 @@ class OpenCSVCategory {
 
         //CSV has no header
         if( !headerRowCount ) {
+            //TODO: processing lines could be done in parallel
             while ((nextLine = reader.readNext()) != null) {
                 cl(nextLine)
             }
@@ -106,15 +107,16 @@ class OpenCSVCategory {
             assert header, "No header in CSV"
             def map = [:]
 
+            //TODO: processing lines could be done in parallel
             while ((nextLine = reader.readNext()) != null) {
-                assert header.size() <= nextLine.size(), "Header is longer than data line"
+                assert header.size() == nextLine.size(), "Header size must be equal withsize of data line"
 
                 if (headerRowCount == 1) {
                     header.eachWithIndex { String name, i -> map[name] = nextLine[i] }
                 }
                 else {
                     header.eachWithIndex { List names, i ->
-                        getNameMap(map, names, nextLine[i] )
+                        convertNamesToMaps(map, names, nextLine[i] )
                     }
                 }
                 
@@ -126,23 +128,42 @@ class OpenCSVCategory {
     }
 
     /**
+     * Recursively process the list of names to build the maps and lists which will be passed to the Closure
      *
      * @param map
-     * @param l
-     * @param val
+     * @param names
+     * @param value
      * @return
      */
-    private static Map getNameMap(Map map, List l, val) {
-        def name = l.head()
-        def tail = l.tail()
+    private static void convertNamesToMaps(Map map, List names, value) {
+        String name = names.head()
+        List namesTail = names.tail()
+        int index = -1
 
-        if(tail) {
-            if(!map[name]) { map[name] = [:] }
-            map[name] << getNameMap(map[name], tail, val)
+        //Dealing with repeating section, so handle it as List of Maps
+        if(name.contains('[') && name.endsWith(']')) {
+            int i = name.indexOf('[')
+            index = name.substring(i+1,name.size()-1) as int
+            name = name.substring(0, i)
+        }
+
+        log.debug "$name index:$index names:$names value:$value map:$map"
+
+        if(namesTail) {
+            if(index == -1) {
+                if(!map[name]) { map[name] = [:] }
+                convertNamesToMaps(map[name], namesTail, value)
+            }
+            else {
+                //Dealing with repeating section, so handle it as List of Maps
+                if(!map[name]) { map[name] = [] } //init List
+                if(!map[name][index]) { map[name][index] = [:] } //init Map in the List
+
+                convertNamesToMaps(map[name][index], namesTail, value)
+            }
         }
         else {
-            map[name] = val
+            map[name] = value
         }
-        return map
     }
 }

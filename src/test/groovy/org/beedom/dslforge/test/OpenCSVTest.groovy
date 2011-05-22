@@ -90,8 +90,11 @@ class OpenCSVTest {
     public void multiLineHeaderWithRepeatValues() {
         def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
 
+        def i=0
+
         dsle.run {
             new File("src/test/data/multiHeaderWithRepeat.csv").openCsvEachRow(3) { user ->
+
                 assert user.kind
                 assert user.sex
 
@@ -102,7 +105,14 @@ class OpenCSVTest {
                 assert user.contacts.phone[0].number
 
                 assert user.contacts.email[0].purpose
-                assert user.contacts.eamil[0].address
+                assert user.contacts.email[0].address
+
+                if(i==0) {
+                    assert user.contacts.email[1].purpose
+                    assert user.contacts.email[1].address
+                }
+
+                i++
             }
         }
     }
