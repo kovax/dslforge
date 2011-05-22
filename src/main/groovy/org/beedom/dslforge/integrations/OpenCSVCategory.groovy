@@ -17,6 +17,7 @@ package org.beedom.dslforge.integrations
 
 import au.com.bytecode.opencsv.CSVReader
 import groovy.util.logging.Slf4j
+import au.com.bytecode.opencsv.CSVParser
 
 /**
  * @author zs.myth
@@ -72,6 +73,23 @@ class OpenCSVCategory {
         }
     }
 
+    
+    /**
+     *
+     * @param options
+     * @return
+     */
+    private static def setDefaultOptions(Map options) {
+        assert options != null, "option cannot be null"
+
+        options.headerRows    = options.headerRows    ?: 0 //Elvis operator  ,
+        options.skipRows      = options.skipRows      ?: 0
+        options.separatorChar = options.separatorChar ?: CSVParser.DEFAULT_SEPARATOR
+        options.quoteChar     = options.quoteChar     ?: CSVParser.DEFAULT_QUOTE_CHARACTER
+        options.escapeChar    = options.escapeChar    ?: CSVParser.DEFAULT_ESCAPE_CHARACTER
+        options.strictQuotes  = options.strictQuotes  ?: CSVParser.DEFAULT_STRICT_QUOTES
+    }
+
 
     /**
      *
@@ -79,7 +97,7 @@ class OpenCSVCategory {
      * @param cl
      */
     public static void openCsvEachRow(File self, Closure cl) {
-        openCsvEachRow(self,0,cl)
+        openCsvEachRow(self, [:], cl)
     }
 
 
@@ -89,29 +107,34 @@ class OpenCSVCategory {
      * @param headerRowCount
      * @param cl
      */
-    public static void openCsvEachRow(File self, Integer headerRowCount, Closure cl) {
-        CSVReader reader = new CSVReader(new FileReader(self));
-        String[] nextLine;
+    public static void openCsvEachRow(File self, Map options, Closure cl) {
+        setDefaultOptions(options)
 
-        log.info "headerRowCount '$headerRowCount'"
+        String[] nextLine;
+        CSVReader reader = new CSVReader(
+                new FileReader(self), options.separatorChar, options.quoteChar, options.escapeChar, options.skipRows, options.strictQuotes);
+
+        def headerRows = options.headerRows
+
+        log.info "headerRows '$headerRows'"
 
         //CSV has no header
-        if( !headerRowCount ) {
-            //TODO: processing lines could be done in parallel
+        if( !headerRows ) {
+            //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {
                 cl(nextLine)
             }
         }
         else {
-            List header = getCsvHeader(reader, headerRowCount)
+            List header = getCsvHeader(reader, headerRows)
             assert header, "No header in CSV"
             def map = [:]
 
-            //TODO: processing lines could be done in parallel
+            //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {
-                assert header.size() == nextLine.size(), "Header size must be equal withsize of data line"
+                assert header.size() == nextLine.size(), "Header size must be equal with the size of data line"
 
-                if (headerRowCount == 1) {
+                if (headerRows == 1) {
                     header.eachWithIndex { String name, i -> map[name] = nextLine[i] }
                 }
                 else {
@@ -120,7 +143,7 @@ class OpenCSVCategory {
                     }
                 }
                 
-                log.info "map passed to Closure: $map"
+                log.info "map to closure: $map"
 
                 cl(map)
             }
@@ -128,7 +151,7 @@ class OpenCSVCategory {
     }
 
     /**
-     * Recursively process the list of names to build the maps and lists which will be passed to the Closure
+     * Recursively process the list of names to build the Maps and Lists which will be passed to the Closure
      *
      * @param map
      * @param names
