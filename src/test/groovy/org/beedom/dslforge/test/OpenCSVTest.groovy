@@ -33,7 +33,7 @@ class OpenCSVTest {
         def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
 
         dsle.run {
-            new File("src/test/data/address.csv").openCsvEachRow(1) { address ->
+            new File("src/test/data/address.csv").openCsvEachRow(headerRows:1) { address ->
                 assert address.name
                 assert address.postal
                 assert address.email
@@ -67,7 +67,7 @@ class OpenCSVTest {
         def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
         
         dsle.run {
-            new File("src/test/data/multiHeader.csv").openCsvEachRow(2) { user ->
+            new File("src/test/data/multiHeader.csv").openCsvEachRow(headerRows:2) { user ->
                 assert user.kind
                 assert user.sex
 
@@ -93,8 +93,7 @@ class OpenCSVTest {
         def i=0
 
         dsle.run {
-            new File("src/test/data/multiHeaderWithRepeat.csv").openCsvEachRow(3) { user ->
-
+            new File("src/test/data/multiHeaderWithRepeat.csv").openCsvEachRow(headerRows:3) { user ->
                 assert user.kind
                 assert user.sex
 
@@ -108,8 +107,12 @@ class OpenCSVTest {
                 assert user.contacts.email[0].address
 
                 if(i==0) {
-                    assert user.contacts.email[1].purpose
-                    assert user.contacts.email[1].address
+                    assert user.contacts.email[1].purpose == "secondary"
+                    assert user.contacts.email[1].address == "customer2@nowhere.com"
+                }
+                else {
+                    assert user.contacts.email[1].purpose == ""
+                    assert user.contacts.email[1].address == ""
                 }
 
                 i++
