@@ -20,6 +20,7 @@ import groovy.util.logging.Slf4j
 import au.com.bytecode.opencsv.CSVParser
 
 /**
+ *
  * @author zs.myth
  */
 @Slf4j
@@ -31,7 +32,11 @@ class OpenCSVCategory {
      * @param rowCount
      * @return
      */
-    public static List getCsvHeader(CSVReader reader, Integer rowCount) {
+    private static List getCsvHeader(CSVReader reader, Integer rowCount) {
+        assert rowCount, "row count for header must be grater than zero"
+
+        log.info "headerRows '$rowCount'"
+
         if(rowCount == 1) {
             return reader.readNext() as List;
         }
@@ -43,10 +48,13 @@ class OpenCSVCategory {
             for(i in 0..rowCount-1) {
                 headerRows[i] = reader.readNext();
 
+                assert headerRows[i], "$i. row in header is null or zero size"
+
                 log.info "$i. header row size: ${headerRows[i].size()}"
 
+                //compare current size with the previous
                 if(size) {
-                    assert headerRows[i].size() == size, "All header rows must have the same size"
+                    assert headerRows[i].size() == size, "$i. header row size is not equal with the previous. All header rows must have the same size"
                 }
                 size = headerRows[i].size()
             }
@@ -73,7 +81,7 @@ class OpenCSVCategory {
         }
     }
 
-    
+
     /**
      *
      * @param options
@@ -82,12 +90,38 @@ class OpenCSVCategory {
     private static def setDefaultOptions(Map options) {
         assert options != null, "option cannot be null"
 
-        options.headerRows    = options.headerRows    ?: 0 //Elvis operator  ,
+        options.headerRows    = options.headerRows    ?: 0 //Elvis operator
         options.skipRows      = options.skipRows      ?: 0
         options.separatorChar = options.separatorChar ?: CSVParser.DEFAULT_SEPARATOR
         options.quoteChar     = options.quoteChar     ?: CSVParser.DEFAULT_QUOTE_CHARACTER
         options.escapeChar    = options.escapeChar    ?: CSVParser.DEFAULT_ESCAPE_CHARACTER
         options.strictQuotes  = options.strictQuotes  ?: CSVParser.DEFAULT_STRICT_QUOTES
+    }
+
+
+    /**
+     *
+     * @param self
+     * @return
+     */
+    public static List openCsvHeader(File self) {
+        getCsvHeader(self,[:])
+    }
+
+
+    /**
+     *
+     * @param self
+     * @param options
+     * @return
+     */
+    public static List openCsvHeader(File self, Map options) {
+        setDefaultOptions(options)
+
+        CSVReader reader = new CSVReader(
+                new FileReader(self), options.separatorChar, options.quoteChar, options.escapeChar, options.skipRows, options.strictQuotes);
+
+        return getCsvHeader(reader, options.headerRows)
     }
 
 
@@ -115,19 +149,26 @@ class OpenCSVCategory {
                 new FileReader(self), options.separatorChar, options.quoteChar, options.escapeChar, options.skipRows, options.strictQuotes);
 
         def headerRows = options.headerRows
-
-        log.info "headerRows '$headerRows'"
+        List header = options.header
 
         //CSV has no header
-        if( !headerRows ) {
+        if(!headerRows && !header) {
+            log.warn "No header was specified so reverting to original openCsv behaviour"
             //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {
                 cl(nextLine)
             }
         }
         else {
-            List header = getCsvHeader(reader, headerRows)
-            assert header, "No header in CSV"
+            if(!header) {
+                header = getCsvHeader(reader, headerRows)
+            }
+            else {
+                log.info "external header: $header"
+                headerRows = header.size()
+            }
+
+            assert header, "no header is availbale"
             def map = [:]
 
             //TODO: processing lines could be done in parallel, but be careful as closure written by user
@@ -135,7 +176,9 @@ class OpenCSVCategory {
                 assert header.size() == nextLine.size(), "Header size must be equal with the size of data line"
 
                 if (headerRows == 1) {
-                    header.eachWithIndex { String name, i -> map[name] = nextLine[i] }
+                    header.eachWithIndex { String name, i ->
+                        map[name] = nextLine[i]
+                    }
                 }
                 else {
                     header.eachWithIndex { List names, i ->
@@ -170,11 +213,12 @@ class OpenCSVCategory {
             name = name.substring(0, i)
         }
 
-        log.debug "$name index:$index names:$names value:$value map:$map"
+        log.info "$name index:$index names:$names value:$value"
 
         if(namesTail) {
             if(index == -1) {
-                if(!map[name]) { map[name] = [:] }
+                if(!map[name]) { map[name] = [:] } //init Map
+
                 convertNamesToMaps(map[name], namesTail, value)
             }
             else {
