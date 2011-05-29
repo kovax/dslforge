@@ -17,7 +17,8 @@ dependencies {
 
     compile group: 'commons-cli', name: 'commons-cli', version: '1.2'
     compile group: 'org.apache.ant', name: 'ant', version: '1.7.+'
-    compile group: 'org.slf4j', name: 'slf4j-simple', version: '1.6.1'
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.6.1'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version='0.9.9'
     compile group: 'groovytools-builder', name: 'groovytools-builder', version: '1.1.6'
 
     testCompile group: 'org.seleniumhq.selenium.client-drivers', name: 'selenium-java-client-driver', version: '1.0.1', transitive: false

@@ -35,50 +35,45 @@ class OpenCSVCategory {
     private static List getCsvHeader(CSVReader reader, Integer rowCount) {
         assert rowCount, "row count for header must be grater than zero"
 
-        log.info "headerRows '$rowCount'"
+        log.debug "rowCount: '$rowCount'"
 
-        if(rowCount == 1) {
-            return reader.readNext() as List;
-        }
-        else {
-            def headerRows = []
-            def size = null
+        def headerRows = []
+        def size = null
 
-            //read header lines into a list of arrays, check size of each rows
-            for(i in 0..rowCount-1) {
-                headerRows[i] = reader.readNext();
+        //read header lines into a list of arrays, check size of each rows
+        for (i in 0..rowCount-1) {
+            headerRows[i] = reader.readNext();
 
-                assert headerRows[i], "$i. row in header is null or zero size"
+            assert headerRows[i], "$i. row in header is null or zero size"
 
-                log.info "$i. header row size: ${headerRows[i].size()}"
+            log.info "$i. header row size: ${headerRows[i].size()}"
 
-                //compare current size with the previous
-                if(size) {
-                    assert headerRows[i].size() == size, "$i. header row size is not equal with the previous. All header rows must have the same size"
-                }
-                size = headerRows[i].size()
+            //compare current size with the previous
+            if (size) {
+                assert headerRows[i].size() == size, "$i. header row size is not equal with the previous. All header rows must have the same size"
             }
-
-            def currentNames = []
-            def header = []
-
-            //construct the path of each header
-            for(i in 0..size-1) {
-                header[i] = []
-                for(j in 0..rowCount-1) {
-                    def name = headerRows[j][i]
-
-                    //if not null/empty take this string otherwise use the buffer of currentNames
-                    if(name) { currentNames[j] = name }
-                    else { name = currentNames[j] }
-
-                    //if not null/empty append it to the list
-                    if(name) { header[i] << name }
-                }
-                log.info "$i. header = ${header[i]}"
-            }
-            return header
+            size = headerRows[i].size()
         }
+
+        def currentNames = []
+        def header = []
+
+        //construct the path of each header
+        for (i in 0..size - 1) {
+            header[i] = []
+            for (j in 0..rowCount - 1) {
+                def name = headerRows[j][i]
+
+                //if not null/empty take this string otherwise use the buffer of currentNames
+                if (name) { currentNames[j] = name }
+                else { name = currentNames[j] }
+
+                //if not null/empty append it to the list
+                if (name) { header[i] << name }
+            }
+            log.info "$i. header = ${header[i]}"
+        }
+        return header
     }
 
 
@@ -164,8 +159,7 @@ class OpenCSVCategory {
                 header = getCsvHeader(reader, headerRows)
             }
             else {
-                log.info "external header: $header"
-                headerRows = header.size()
+                log.debug "external header: $header"
             }
 
             assert header, "no header is availbale"
@@ -175,15 +169,8 @@ class OpenCSVCategory {
             while ((nextLine = reader.readNext()) != null) {
                 assert header.size() == nextLine.size(), "Header size must be equal with the size of data line"
 
-                if (headerRows == 1) {
-                    header.eachWithIndex { String name, i ->
-                        map[name] = nextLine[i]
-                    }
-                }
-                else {
-                    header.eachWithIndex { List names, i ->
-                        convertNamesToMaps(map, names, nextLine[i] )
-                    }
+                header.eachWithIndex { List names, i ->
+                    convertNamesToMaps(map, names, nextLine[i] )
                 }
                 
                 log.info "map to closure: $map"
@@ -213,7 +200,7 @@ class OpenCSVCategory {
             name = name.substring(0, i)
         }
 
-        log.info "$name index:$index names:$names value:$value"
+        log.debug "$name index:$index names:$names value:$value"
 
         if(namesTail) {
             if(index == -1) {

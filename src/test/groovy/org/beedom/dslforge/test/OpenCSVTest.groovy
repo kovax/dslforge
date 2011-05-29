@@ -3,7 +3,6 @@ package org.beedom.dslforge.test
 import org.junit.Before
 import org.junit.Test
 
-import org.beedom.dslforge.DSLEngine
 import org.beedom.dslforge.integrations.OpenCSVCategory
 
 /**
@@ -16,9 +15,7 @@ class OpenCSVTest {
 
     @Test
     public void noHeaderValues() {
-        def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
-
-        dsle.run {
+        use(OpenCSVCategory) {
             new File("src/test/data/noHeaderAddress.csv").openCsvEachRow { address ->
                 assert address[0]
                 assert address[1]
@@ -29,9 +26,7 @@ class OpenCSVTest {
 
     @Test
     public void singleLineHeaderValues() {
-        def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
-
-        dsle.run {
+        use(OpenCSVCategory) {
             new File("src/test/data/address.csv").openCsvEachRow(headerRows:1) { address ->
                 assert address.name
                 assert address.postal
@@ -42,7 +37,6 @@ class OpenCSVTest {
 
     @Test
     public void multiLineHeader() {
-        
         use(OpenCSVCategory) {
             def header = new File("src/test/data/multiHeader.csv").openCsvHeader(headerRows:2)
 
@@ -64,9 +58,7 @@ class OpenCSVTest {
 
     @Test
     public void multiLineHeaderValues() {
-        def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
-        
-        dsle.run {
+        use(OpenCSVCategory) {
             new File("src/test/data/multiHeader.csv").openCsvEachRow(headerRows:2) { user ->
                 assert user.kind
                 assert user.sex
@@ -88,11 +80,9 @@ class OpenCSVTest {
 
     @Test
     public void multiLineHeaderWithRepeatValues() {
-        def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
-
         def i=0
 
-        dsle.run {
+        use(OpenCSVCategory) {
             new File("src/test/data/multiHeaderWithRepeat.csv").openCsvEachRow(headerRows:3) { user ->
                 assert user.kind
                 assert user.sex
@@ -123,11 +113,9 @@ class OpenCSVTest {
 
     @Test
     public void multiLineHeaderWithRepeatValues1() {
-        def dsle = new DSLEngine("src/test/conf/DecoratorTestConfig.groovy", "development")
-
         def i=0
 
-        dsle.run {
+        use(OpenCSVCategory) {
             def header = new File("src/test/data/multiHeaderWithRepeat.csv").openCsvHeader(headerRows:3)
             
             new File("src/test/data/multiHeaderWithRepeat.csv").openCsvEachRow(header:header, skipRows:3) { user ->

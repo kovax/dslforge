@@ -47,17 +47,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="slf4j-api-1.6.1.jar">
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.slf4j/slf4j-api/jars/slf4j-api-1.6.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.slf4j/slf4j-api/sources/slf4j-api-1.6.1-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="selenium-remote-common-2.0a7.jar">
         <CLASSES>
           <root url="jar://$USER_HOME$/.gradle/cache/org.seleniumhq.selenium/selenium-remote-common/jars/selenium-remote-common-2.0a7.jar!/" />
@@ -99,19 +88,10 @@
         </SOURCES>
       </library>
     </orderEntry>
-    <orderEntry type="module-library">
-      <library name="slf4j-simple-1.6.1.jar">
-        <CLASSES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.slf4j/slf4j-simple/jars/slf4j-simple-1.6.1.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES>
-          <root url="jar://$USER_HOME$/.gradle/cache/org.slf4j/slf4j-simple/sources/slf4j-simple-1.6.1-sources.jar!/" />
-        </SOURCES>
-      </library>
-    </orderEntry>
     <orderEntry type="library" name="groovy-1.8.0" level="application" />
     <orderEntry type="library" name="openCSV" level="project" />
+    <orderEntry type="library" name="logback" level="project" />
+    <orderEntry type="library" name="slf4j-api" level="project" />
   </component>
 </module>
 
