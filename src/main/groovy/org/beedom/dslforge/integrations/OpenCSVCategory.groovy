@@ -18,6 +18,7 @@ package org.beedom.dslforge.integrations
 import au.com.bytecode.opencsv.CSVReader
 import groovy.util.logging.Slf4j
 import au.com.bytecode.opencsv.CSVParser
+import org.apache.tools.ant.types.resources.selectors.InstanceOf
 
 /**
  *
@@ -26,13 +27,8 @@ import au.com.bytecode.opencsv.CSVParser
 @Slf4j
 class OpenCSVCategory {
 
-    /**
-     *
-     * @param reader
-     * @param rowCount
-     * @return
-     */
-    private static List getCsvHeader(CSVReader reader, Integer rowCount) {
+
+    private static List getCsvHeader(CSVReader reader, int rowCount, int skipColumns, boolean trim) {
         assert rowCount, "row count for header must be grater than zero"
 
         log.debug "rowCount: '$rowCount'"
@@ -46,7 +42,7 @@ class OpenCSVCategory {
 
             assert headerRows[i], "$i. row in header is null or zero size"
 
-            log.info "$i. header row size: ${headerRows[i].size()}"
+            log.debug "headerRows[$i] size: ${headerRows[i].size()}"
 
             //compare current size with the previous
             if (size) {
@@ -59,21 +55,118 @@ class OpenCSVCategory {
         def header = []
 
         //construct the path of each header
-        for (i in 0..size - 1) {
-            header[i] = []
-            for (j in 0..rowCount - 1) {
+        for (i in skipColumns..size-1) {
+            List aList = []
+            for (j in 0..rowCount-1) {
+
+                //def name = trim ? headerRows[j][i].trim() : headerRows[j][i]
                 def name = headerRows[j][i]
 
                 //if not null/empty take this string otherwise use the buffer of currentNames
-                if (name) { currentNames[j] = name }
-                else { name = currentNames[j] }
+                if (name) {
+                    currentNames[j] = trim ? name.trim() : name
+                }
+
+                name = currentNames[j]
 
                 //if not null/empty append it to the list
-                if (name) { header[i] << name }
+                if (name) { aList << name }
             }
-            log.info "$i. header = ${header[i]}"
+            log.info "header[${i-skipColumns}] = $aList"
+            header << aList
         }
         return header
+    }
+
+
+    /**
+     * Recursively process the list of names to build the nested Maps and Lists
+     *
+     * @param map
+     * @param names
+     * @param value
+     * @return
+     */
+    private static void convertNamesToMaps(Map map, List names, boolean trim, value) {
+        String name = names.head()
+        List namesTail = names.tail()
+        int index = -1
+
+        //Dealing with repeating section, so handle it as List of Maps
+        if(name.contains('[') && name.endsWith(']')) {
+            int i = name.indexOf('[')
+            index = name.substring(i+1,name.size()-1) as int
+            name = name.substring(0, i)
+        }
+
+        log.debug "$name index:$index names:$names value:'$value'"
+
+        if(namesTail) {
+            if(index == -1) {
+                if(!map[name]) { map[name] = [:] } //init Map
+
+                convertNamesToMaps(map[name], namesTail, trim, value)
+            }
+            else {
+                //Dealing with repeating section, so handle it as List of Maps
+                if(!map[name]) { map[name] = [] } //init List
+                if(!map[name][index]) { map[name][index] = [:] } //init Map in the List
+
+                convertNamesToMaps(map[name][index], namesTail, trim, value)
+            }
+        }
+        else {
+            map[name] = trim && value && (value instanceof String) ? value.trim() : value
+        }
+    }
+
+    /**
+     *
+     * @param reader
+     * @param options
+     * @param cl
+     */
+    private static void processCsvEachRow(CSVReader reader, Map options, Closure cl) {
+        String[] nextLine;
+
+        int headerRows = options.headerRows
+        int skipColumns = options.skipColumns
+        List header = options.header
+
+        //CSV has no header
+        if(!headerRows && !header) {
+            log.warn "No header was specified so reverting to original openCsv behaviour"
+            //TODO: processing lines could be done in parallel, but be careful as closure written by user
+            while ((nextLine = reader.readNext()) != null) {
+                cl(nextLine)
+            }
+        }
+        else {
+            if(!header) {
+                header = getCsvHeader(reader, headerRows, skipColumns, options.trimHeader)
+            }
+            else {
+                log.debug "external header: $header"
+            }
+
+            assert header, "no header is availbale"
+
+            def map = [:]
+            def index = 0
+
+            //TODO: processing lines could be done in parallel, but be careful as closure written by user
+            while ((nextLine = reader.readNext()) != null) {
+                assert header.size() == nextLine.size()-skipColumns, "Header size must be equal with the size of data line"
+
+                header.eachWithIndex { List names, i ->
+                    convertNamesToMaps(map, names, options.trimData, nextLine[i+skipColumns])
+                }
+
+                log.info "map to closure: $map"
+
+                cl(map,index++)
+            }
+        }
     }
 
 
@@ -83,9 +176,13 @@ class OpenCSVCategory {
      * @return
      */
     private static def setDefaultOptions(Map options) {
-        assert options != null, "option cannot be null"
+        assert options != null, "options cannot be null"
 
         options.headerRows    = options.headerRows    ?: 0 //Elvis operator
+        options.skipColumns   = options.skipColumns   ?: 0
+        options.skipRColumns  = options.skipRColumns  ?: 0
+        options.trimHeader    = options.trimHeader    ?: true
+        options.trimData      = options.trimData      ?: false
         options.skipRows      = options.skipRows      ?: 0
         options.separatorChar = options.separatorChar ?: CSVParser.DEFAULT_SEPARATOR
         options.quoteChar     = options.quoteChar     ?: CSVParser.DEFAULT_QUOTE_CHARACTER
@@ -100,7 +197,7 @@ class OpenCSVCategory {
      * @return
      */
     public static List openCsvHeader(File self) {
-        getCsvHeader(self,[:])
+        openCsvHeader(self,[:])
     }
 
 
@@ -114,9 +211,9 @@ class OpenCSVCategory {
         setDefaultOptions(options)
 
         CSVReader reader = new CSVReader(
-                new FileReader(self), options.separatorChar, options.quoteChar, options.escapeChar, options.skipRows, options.strictQuotes);
+                new FileReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
 
-        return getCsvHeader(reader, options.headerRows)
+        return getCsvHeader(reader, options.headerRows, options.skipColumns, options.trimHeader)
     }
 
 
@@ -133,91 +230,67 @@ class OpenCSVCategory {
     /**
      *
      * @param self
-     * @param headerRowCount
+     * @param options
      * @param cl
      */
     public static void openCsvEachRow(File self, Map options, Closure cl) {
         setDefaultOptions(options)
 
-        String[] nextLine;
         CSVReader reader = new CSVReader(
-                new FileReader(self), options.separatorChar, options.quoteChar, options.escapeChar, options.skipRows, options.strictQuotes);
+                new FileReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
 
-        def headerRows = options.headerRows
-        List header = options.header
-
-        //CSV has no header
-        if(!headerRows && !header) {
-            log.warn "No header was specified so reverting to original openCsv behaviour"
-            //TODO: processing lines could be done in parallel, but be careful as closure written by user
-            while ((nextLine = reader.readNext()) != null) {
-                cl(nextLine)
-            }
-        }
-        else {
-            if(!header) {
-                header = getCsvHeader(reader, headerRows)
-            }
-            else {
-                log.debug "external header: $header"
-            }
-
-            assert header, "no header is availbale"
-            def map = [:]
-
-            //TODO: processing lines could be done in parallel, but be careful as closure written by user
-            while ((nextLine = reader.readNext()) != null) {
-                assert header.size() == nextLine.size(), "Header size must be equal with the size of data line"
-
-                header.eachWithIndex { List names, i ->
-                    convertNamesToMaps(map, names, nextLine[i] )
-                }
-                
-                log.info "map to closure: $map"
-
-                cl(map)
-            }
-        }
+        processCsvEachRow(reader,options,cl)
     }
 
+
     /**
-     * Recursively process the list of names to build the Maps and Lists which will be passed to the Closure
      *
-     * @param map
-     * @param names
-     * @param value
+     * @param self
      * @return
      */
-    private static void convertNamesToMaps(Map map, List names, value) {
-        String name = names.head()
-        List namesTail = names.tail()
-        int index = -1
+    public static List openCsvHeader(String self) {
+        openCsvHeader(self,[:])
+    }
 
-        //Dealing with repeating section, so handle it as List of Maps
-        if(name.contains('[') && name.endsWith(']')) {
-            int i = name.indexOf('[')
-            index = name.substring(i+1,name.size()-1) as int
-            name = name.substring(0, i)
-        }
 
-        log.debug "$name index:$index names:$names value:$value"
+    /**
+     *
+     * @param self
+     * @param options
+     * @return
+     */
+    public static List openCsvHeader(String self, Map options) {
+        setDefaultOptions(options)
 
-        if(namesTail) {
-            if(index == -1) {
-                if(!map[name]) { map[name] = [:] } //init Map
+        CSVReader reader = new CSVReader(
+                new StringReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
 
-                convertNamesToMaps(map[name], namesTail, value)
-            }
-            else {
-                //Dealing with repeating section, so handle it as List of Maps
-                if(!map[name]) { map[name] = [] } //init List
-                if(!map[name][index]) { map[name][index] = [:] } //init Map in the List
+        return getCsvHeader(reader, options.headerRows, options.skipColumns, options.trimHeader)
+    }
 
-                convertNamesToMaps(map[name][index], namesTail, value)
-            }
-        }
-        else {
-            map[name] = value
-        }
+
+    /**
+     *
+     * @param self
+     * @param cl
+     */
+    public static void openCsvEachRow(String self, Closure cl) {
+        openCsvEachRow(self, [:], cl)
+    }
+
+
+    /**
+     *
+     * @param self
+     * @param options
+     * @param cl
+     */
+    public static void openCsvEachRow(String self, Map options, Closure cl) {
+        setDefaultOptions(options)
+
+        CSVReader reader = new CSVReader(
+                new StringReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
+
+        processCsvEachRow(reader, options, cl)
     }
 }
