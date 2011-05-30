@@ -28,10 +28,10 @@ import org.apache.tools.ant.types.resources.selectors.InstanceOf
 class OpenCSVCategory {
 
 
-    private static List getCsvHeader(CSVReader reader, int rowCount, int skipColumns, boolean trim) {
+    private static List getCsvHeader(CSVReader reader, int rowCount, int skipLeftCols, int skipRightCols, boolean trim) {
         assert rowCount, "row count for header must be grater than zero"
 
-        log.debug "rowCount: '$rowCount'"
+        log.debug "rowCount: $rowCount, skipLeftCols: $skipLeftCols, skipRightCols: $skipRightCols"
 
         def headerRows = []
         def size = null
@@ -54,25 +54,22 @@ class OpenCSVCategory {
         def currentNames = []
         def header = []
 
-        //construct the path of each header
-        for (i in skipColumns..size-1) {
+        //construct the path of each header, make sure to skip columsn if needed
+        for (i in skipLeftCols..size-(1+skipRightCols)) {
             List aList = []
             for (j in 0..rowCount-1) {
 
-                //def name = trim ? headerRows[j][i].trim() : headerRows[j][i]
                 def name = headerRows[j][i]
 
                 //if not null/empty take this string otherwise use the buffer of currentNames
-                if (name) {
-                    currentNames[j] = trim ? name.trim() : name
-                }
+                if (name) { currentNames[j] = trim && name instanceof String ? name.trim() : name }
 
                 name = currentNames[j]
 
                 //if not null/empty append it to the list
                 if (name) { aList << name }
             }
-            log.info "header[${i-skipColumns}] = $aList"
+            log.info "header[${i-skipLeftCols}] = $aList"
             header << aList
         }
         return header
@@ -129,9 +126,10 @@ class OpenCSVCategory {
     private static void processCsvEachRow(CSVReader reader, Map options, Closure cl) {
         String[] nextLine;
 
-        int headerRows = options.headerRows
-        int skipColumns = options.skipColumns
-        List header = options.header
+        int headerRows    = options.headerRows
+        int skipLeftCols  = options.skipLeftCols
+        int skipRightCols = options.skipRightCols
+        List header       = options.header
 
         //CSV has no header
         if(!headerRows && !header) {
@@ -143,7 +141,7 @@ class OpenCSVCategory {
         }
         else {
             if(!header) {
-                header = getCsvHeader(reader, headerRows, skipColumns, options.trimHeader)
+                header = getCsvHeader(reader, headerRows, skipLeftCols, skipRightCols, options.trimHeader)
             }
             else {
                 log.debug "external header: $header"
@@ -156,10 +154,10 @@ class OpenCSVCategory {
 
             //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {
-                assert header.size() == nextLine.size()-skipColumns, "Header size must be equal with the size of data line"
+                assert header.size() == nextLine.size()-(skipLeftCols+skipRightCols), "Header size must be equal with the size of data line"
 
                 header.eachWithIndex { List names, i ->
-                    convertNamesToMaps(map, names, options.trimData, nextLine[i+skipColumns])
+                    convertNamesToMaps(map, names, options.trimData, nextLine[i+skipLeftCols])
                 }
 
                 log.info "map to closure: $map"
@@ -180,7 +178,8 @@ class OpenCSVCategory {
 
         options.headerRows    = options.headerRows    ?: 0 //Elvis operator
         options.skipColumns   = options.skipColumns   ?: 0
-        options.skipRColumns  = options.skipRColumns  ?: 0
+        options.skipLeftCols  = options.skipLeftCols  ?: 0
+        options.skipRightCols = options.skipRightCols ?: 0
         options.trimHeader    = options.trimHeader    ?: true
         options.trimData      = options.trimData      ?: false
         options.skipRows      = options.skipRows      ?: 0
@@ -213,7 +212,7 @@ class OpenCSVCategory {
         CSVReader reader = new CSVReader(
                 new FileReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
 
-        return getCsvHeader(reader, options.headerRows, options.skipColumns, options.trimHeader)
+        return getCsvHeader(reader, options.headerRows, options.skipLeftCols, options.skipRightCols, options.trimHeader)
     }
 
 
@@ -265,7 +264,7 @@ class OpenCSVCategory {
         CSVReader reader = new CSVReader(
                 new StringReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
 
-        return getCsvHeader(reader, options.headerRows, options.skipColumns, options.trimHeader)
+        return getCsvHeader(reader, options.headerRows, options.skipLeftCols, options.skipRightCols, options.trimHeader)
     }
 
 

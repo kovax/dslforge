@@ -177,7 +177,7 @@ kind,userid,password,title,firstName,lastName,sex,purpose,country,countryCode,pr
                 | 5 |   | Abc | John | | |"""
 
         use(OpenCSVCategory) {
-            new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipColumns:1, skipRightComuns:1, trimData:true]) { row, i ->
+            new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipLeftCols:1, skipRightCols:1, trimData:true]) { row, i ->
 
                 assert row.Num
 
