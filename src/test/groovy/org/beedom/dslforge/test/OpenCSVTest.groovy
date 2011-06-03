@@ -4,6 +4,7 @@ import org.junit.Before
 import org.junit.Test
 
 import org.beedom.dslforge.integrations.OpenCSVCategory
+import groovy.xml.MarkupBuilder
 
 /**
  */
@@ -105,6 +106,34 @@ class OpenCSVTest {
 
     def multiLineHeaderFile = "src/test/data/multiHeaderWithRepeat.csv"
 
+
+    def checkMultiLineHeader(header) {
+        assert header
+
+        assert header[0] == ["kind"]
+        assert header[1] == ["userid"]
+        assert header[2] == ["password"]
+        assert header[3] == ["title"]
+        assert header[4] == ["firstName"]
+        assert header[5] == ["lastName"]
+        assert header[6] == ["sex"]
+        assert header[7] == ["contacts", "address[0]", "purpose"]
+        assert header[8] == ["contacts", "address[0]", "country"]
+        assert header[9] == ["contacts", "address[0]", "countryCode"]
+        assert header[10] == ["contacts", "address[0]", "province"]
+        assert header[11] == ["contacts", "address[0]", "address1"]
+        assert header[12] == ["contacts", "address[0]", "city"]
+        assert header[13] == ["contacts", "address[0]", "postalCode"]
+        assert header[14] == ["contacts", "address[0]", "deliveryInfo"]
+        assert header[15] == ["contacts", "phone[0]", "purpose"]
+        assert header[16] == ["contacts", "phone[0]", "areaCode"]
+        assert header[17] == ["contacts", "phone[0]", "number"]
+        assert header[18] == ["contacts", "email[0]", "purpose"]
+        assert header[19] == ["contacts", "email[0]", "address"]
+        assert header[20] == ["contacts", "email[1]", "purpose"]
+        assert header[21] == ["contacts", "email[1]", "address"]
+    }
+
     @Test
     public void multiLineHeaderWithRepeatValues() {
         def i=0
@@ -121,7 +150,9 @@ class OpenCSVTest {
 
         use(OpenCSVCategory) {
             def header = new File(multiLineHeaderFile).openCsvHeader(headerRows:3)
-            
+
+            checkMultiLineHeader(header)
+
             new File(multiLineHeaderFile).openCsvEachRow(header:header, skipRows:3, multiLineHeaderTester)
         }
     }
@@ -137,30 +168,7 @@ kind,userid,password,title,firstName,lastName,sex,purpose,country,countryCode,pr
         use(OpenCSVCategory) {
             def header = new String(headerText).openCsvHeader(headerRows:3)
 
-            assert header
-
-            assert header[0] == ["kind"]
-            assert header[1] == ["userid"]
-            assert header[2] == ["password"]
-            assert header[3] == ["title"]
-            assert header[4] == ["firstName"]
-            assert header[5] == ["lastName"]
-            assert header[6] == ["sex"]
-            assert header[7] == ["contacts", "address[0]", "purpose"]
-            assert header[8] == ["contacts", "address[0]", "country"]
-            assert header[9] == ["contacts", "address[0]", "countryCode"]
-            assert header[10] == ["contacts", "address[0]", "province"]
-            assert header[11] == ["contacts", "address[0]", "address1"]
-            assert header[12] == ["contacts", "address[0]", "city"]
-            assert header[13] == ["contacts", "address[0]", "postalCode"]
-            assert header[14] == ["contacts", "address[0]", "deliveryInfo"]
-            assert header[15] == ["contacts", "phone[0]", "purpose"]
-            assert header[16] == ["contacts", "phone[0]", "areaCode"]
-            assert header[17] == ["contacts", "phone[0]", "number"]
-            assert header[18] == ["contacts", "email[0]", "purpose"]
-            assert header[19] == ["contacts", "email[0]", "address"]
-            assert header[20] == ["contacts", "email[1]", "purpose"]
-            assert header[21] == ["contacts", "email[1]", "address"]
+            checkMultiLineHeader(header)
 
             new File(multiLineHeaderFile).openCsvEachRow(header:header, skipRows:3, multiLineHeaderTester)
         }
@@ -176,24 +184,42 @@ kind,userid,password,title,firstName,lastName,sex,purpose,country,countryCode,pr
                 | 4 | C | Spec error handling | Jack | 1-Dec-02 | |
                 | 5 |   | Abc | John | | |"""
 
+        def writer = new StringWriter()
+        def xml = new MarkupBuilder(writer)
+
+        writer << '<?xml version="1.0" encoding="UTF-8"?>'
+
         use(OpenCSVCategory) {
-            new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipLeftCols:1, skipRightCols:1, trimData:true]) { row, i ->
 
-                assert row.Num
+            xml.calendar
+            {
+                new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipLeftCols:1, skipRightCols:1, trimData:true]) { row, i ->
 
-                if(i==2 || i==4 ) {assert !row.Status}
-                else {assert row.Status}
+                    assert row.Num
+                    assert row.Action
+                    assert row.Who
 
-                assert row.Action
+                    if(i==2 || i==4 ) {assert !row.Status}
+                    else {assert row.Status}
 
-                assert row.Who
+                    if(i==4) {assert !row.When }
+                    else {assert row.When}
 
-                if(i==4) {assert !row.When }
-                else {assert row.When}
+                    if(i==0) {assert row.Progress }
+                    else {assert !row.Progress }
 
-                if(i==0) {assert row.Progress }
-                else {assert !row.Progress }
+                    task(num:row.Num) {
+                        status(row.Status)
+                        action(row.Action)
+                        who(row.Who)
+                        when(row.When)
+                        if(row.Progress) {
+                            progress(row.Progress)
+                        }
+                    }
+                }
             }
+            println writer.toString()
         }
     }
 }

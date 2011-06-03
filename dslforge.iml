@@ -58,15 +58,6 @@
       </library>
     </orderEntry>
     <orderEntry type="module-library">
-      <library name="groovytools-builder-1.1.6.jar">
-        <CLASSES>
-          <root url="jar://$USER_HOME$/groovytools/lib/groovytools-builder-1.1.6.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
       <library name="selenium-server-2.0a7.jar">
         <CLASSES>
           <root url="jar://$USER_HOME$/.gradle/cache/org.seleniumhq.selenium/selenium-server/jars/selenium-server-2.0a7.jar!/" />
@@ -92,6 +83,7 @@
     <orderEntry type="library" name="openCSV" level="project" />
     <orderEntry type="library" name="logback" level="project" />
     <orderEntry type="library" name="slf4j-api" level="project" />
+    <orderEntry type="module" module-name="MetaBuilderTest" />
   </component>
 </module>
 
