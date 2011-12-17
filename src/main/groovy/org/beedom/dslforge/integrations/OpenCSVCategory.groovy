@@ -27,8 +27,16 @@ import org.apache.tools.ant.types.resources.selectors.InstanceOf
 @Slf4j
 class OpenCSVCategory {
 
-
-    private static List getCsvHeader(CSVReader reader, int rowCount, int skipLeftCols, int skipRightCols, boolean trim) {
+	/**
+	 * 
+	 * @param reader
+	 * @param rowCount
+	 * @param skipLeftCols
+	 * @param skipRightCols
+	 * @param trim
+	 * @return
+	 */
+    public static List getCsvHeader(CSVReader reader, int rowCount, int skipLeftCols, int skipRightCols, boolean trim) {
         assert rowCount, "row count for header must be grater than zero"
 
         log.debug "rowCount: $rowCount, skipLeftCols: $skipLeftCols, skipRightCols: $skipRightCols"
@@ -81,10 +89,10 @@ class OpenCSVCategory {
      *
      * @param map
      * @param names
-     * @param value
+     * @param value Can have various types
      * @return
      */
-    private static void convertNamesToMaps(Map map, List names, boolean trim, value) {
+    public static void convertNamesToMaps(Map map, List names, boolean trim, value) {
         String name = names.head()
         List namesTail = names.tail()
         int index = -1
@@ -117,6 +125,7 @@ class OpenCSVCategory {
         }
     }
 
+	
     /**
      *
      * @param reader
@@ -147,7 +156,7 @@ class OpenCSVCategory {
                 log.debug "external header: $header"
             }
 
-            assert header, "no header is availbale"
+            assert header, "no header is availalle"
 
             def map = [:]
             def index = 0
@@ -160,7 +169,7 @@ class OpenCSVCategory {
                     convertNamesToMaps(map, names, options.trimData, nextLine[i+skipLeftCols])
                 }
 
-                log.info "map to closure: $map"
+                log.info "map given to closure of user: $map"
 
                 cl(map,index++)
             }
@@ -173,11 +182,10 @@ class OpenCSVCategory {
      * @param options
      * @return
      */
-    private static def setDefaultOptions(Map options) {
+    public static def setDefaultOptions(Map options) {
         assert options != null, "options cannot be null"
 
         options.headerRows    = options.headerRows    ?: 0 //Elvis operator
-        options.skipColumns   = options.skipColumns   ?: 0
         options.skipLeftCols  = options.skipLeftCols  ?: 0
         options.skipRightCols = options.skipRightCols ?: 0
         options.trimHeader    = options.trimHeader    ?: true
@@ -217,7 +225,8 @@ class OpenCSVCategory {
 
 
     /**
-     *
+     * Category method
+     * 
      * @param self
      * @param cl
      */
@@ -227,6 +236,7 @@ class OpenCSVCategory {
 
 
     /**
+     * Category method
      *
      * @param self
      * @param options
@@ -243,6 +253,7 @@ class OpenCSVCategory {
 
 
     /**
+     * Category method
      *
      * @param self
      * @return
@@ -253,6 +264,7 @@ class OpenCSVCategory {
 
 
     /**
+     * Category method
      *
      * @param self
      * @param options
@@ -269,6 +281,7 @@ class OpenCSVCategory {
 
 
     /**
+     * Category method
      *
      * @param self
      * @param cl
@@ -279,6 +292,7 @@ class OpenCSVCategory {
 
 
     /**
+     * Category method
      *
      * @param self
      * @param options

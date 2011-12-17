@@ -7,6 +7,7 @@ import org.beedom.dslforge.integrations.OpenCSVCategory
 import groovy.xml.MarkupBuilder
 
 /**
+ * 
  */
 class OpenCSVTest {
 
