@@ -42,7 +42,7 @@ class CompareCSV {
     def expectedDatasource = [:]    
     def difference = []
 
-    def index = 1
+    def index = 0
 
     /**
      * 
