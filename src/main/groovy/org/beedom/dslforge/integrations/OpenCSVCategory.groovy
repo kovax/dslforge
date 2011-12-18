@@ -88,7 +88,7 @@ class OpenCSVCategory {
      * Recursively process the list of names to build the nested Maps and Lists
      *
      * @param map
-     * @param names
+     * @param names List of String for one column e.g. 'contacts.address[0].purpose'
      * @param value Can have various types
      * @return
      */
@@ -165,6 +165,7 @@ class OpenCSVCategory {
             while ((nextLine = reader.readNext()) != null) {
                 assert header.size() == nextLine.size()-(skipLeftCols+skipRightCols), "Header size must be equal with the size of data line"
 
+                //header is a List of Lists
                 header.eachWithIndex { List names, i ->
                     convertNamesToMaps(map, names, options.trimData, nextLine[i+skipLeftCols])
                 }
