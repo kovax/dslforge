@@ -1,18 +1,18 @@
 /*
-* Copyright 2003-2011 the original author or authors.
-*
-* Licensed under the Apache License, Version 2.0 (the "License");
-* you may not use this file except in compliance with the License.
-* You may obtain a copy of the License at
-*
-*     http://www.apache.org/licenses/LICENSE-2.0
-*
-* Unless required by applicable law or agreed to in writing, software
-* distributed under the License is distributed on an "AS IS" BASIS,
-* WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-* See the License for the specific language governing permissions and
-* limitations under the License.
-*/
+ * Copyright 2003-2011 the original author or authors.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 package org.beedom.dslforge.integrations
 
 import java.util.Map;
@@ -30,126 +30,128 @@ import static org.hamcrest.Matchers.*;
  */
 @Slf4j
 class CompareCSV {
-	
-	/**
-	 * DSL Key for DSLEngine
-	 */
+
+    /**
+     * DSL Key for DSLEngine
+     */
     def static final dslKey = "csvCompare"
-	
-	private boolean failFast = false;
 
-	def leftDatasource  = [:]
-	def rightDatasource = [:]
-	
-	/**
-	 * 
-	 */
-	private void setCSVReader(ds) {
-		OpenCSVCategory.setDefaultOptions(ds.options)
+    private boolean failFast = false;
 
-		ds.reader = new CSVReader(
-			 new FileReader(ds.file), 
-			 ds.options.separatorChar as char,
-			 ds.options.quoteChar as char, 
-			 ds.options.escapeChar as char, 
-			 ds.options.skipRows, 
-			 ds.options.strictQuotes);
-	}
+    def actualDatasource  = [:]
+    def expectedDatasource = [:]    
+    def difference = []
 
-	/**
-	 * 
-	 * @param ds
-	 */
-	private void setHeader(ds) {
-		if(!ds.reader) {
-			setCSVReader(ds)
-		}
+    def index = 1
 
-		if(!ds.header) {
-			assert ds.options.headerRows, "No headerRows was specified"
+    /**
+     * 
+     */
+    private void setCSVReader(ds) {
+        OpenCSVCategory.setDefaultOptions(ds.options)
 
-			ds.header = OpenCSVCategory.getCsvHeader( ds.reader, ds.options.headerRows, 
-													  ds.options.skipLeftCols, ds.options.skipRightCols, 
-													  ds.options.trimHeader)
-		}
-		else {
-			log.debug "using external header: ${ds.header}"
-		}
-	}
-	
-	/**
-	 * 
-	 * @param ds
-	 * @return
-	 */
-	private def getNextRow(ds) {
-		String[] nextLine;
-		def map = [:]
-		
-		if(!ds.header) {
-			setHeader(ds)
-		}
+        ds.reader = new CSVReader(
+            new FileReader(ds.file),
+            ds.options.separatorChar as char,
+            ds.options.quoteChar as char,
+            ds.options.escapeChar as char,
+            ds.options.skipRows,
+            ds.options.strictQuotes
+        );
+    }
 
-		nextLine = ds.reader.readNext()
-		
-		if (nextLine) {
-			assert ds.header.size() == nextLine.size()-(ds.options.skipLeftCols+ds.options.skipRightCols), "Header size must be equal with the size of data line"
+    /**
+     * 
+     * @param ds
+     */
+    private void setHeader(ds) {
+        if(!ds.reader) {
+            setCSVReader(ds)
+        }
 
-			ds.header.eachWithIndex { List names, i ->
-				OpenCSVCategory.convertNamesToMaps(map, names, ds.options.trimData, nextLine[i+ds.options.skipLeftCols])
-			}
+        if(!ds.header) {
+            assert ds.options.headerRows, "No headerRows was specified"
 
-			log.info "map for closure: $map"
+            ds.header = OpenCSVCategory.getCsvHeader(
+                                ds.reader, ds.options.headerRows,
+                                ds.options.skipLeftCols, ds.options.skipRightCols,
+                                ds.options.trimHeader)
+        }
+        else {
+            log.debug "using external header: ${ds.header}"
+        }
+    }
 
-			return map
-		}
-		
-		return null
-	}
-	
-	
-	/**
-	 * 
-	 * @param cl
-	 * @return
-	 */
-	public void map(Closure cl) {
-		int i = 0;
-		def lNext;
-		def failedAsserts = []
+    /**
+     * 
+     * @param ds
+     * @return
+     */
+    private def getNextRow(ds) {
+        String[] nextLine;
+        def map = [:]
 
-		log.info "left : $leftDatasource"
-		log.info "rigth: $rightDatasource"
+        if(!ds.header) {
+            setHeader(ds)
+        }
 
-		while ((lNext = getNextRow(leftDatasource)) != null) {
-			
-			if(failFast) {
-				cl (lNext, getNextRow(rightDatasource), i++)
-			}
-			else {
-				try {
-					cl (lNext, getNextRow(rightDatasource), i++)
-				} catch (AssertionError e) {
-					failedAsserts << e
-				}
-			}
-		}
-		
-		if (failedAsserts)
-			println failedAsserts;
-	}
-	
-	def assertThat(r) {
-		if(failFast) {
-			return [equalTo: { l -> assertThat(r, equalTo(l)) } ]
-		}
-		else {
-			try {
-				return [equalTo: { l -> assertThat(r, equalTo(l)) } ]
-			} catch (AssertionError e) {
-				failedAsserts << e
-			}
-		}
-	}
-    
+        nextLine = ds.reader.readNext()
+
+        if (nextLine) {
+            assert ds.header.size() == nextLine.size()-(ds.options.skipLeftCols+ds.options.skipRightCols), "Header size must be equal with the size of data line"
+
+            ds.header.eachWithIndex {
+                List names, i ->
+                OpenCSVCategory.convertNamesToMaps(map, names, ds.options.trimData, nextLine[i+ds.options.skipLeftCols])
+            }
+
+            log.info "map for closure: $map"
+
+            return map
+        }
+
+        return null
+    }
+
+
+    /**
+     * 
+     * @param cl
+     */
+    public void map(Closure cl) {
+        int i = 0;
+        def actualNext;
+
+        log.info "actualDS   : $actualDatasource"
+        log.info "expectedDS : $expectedDatasource"
+
+        //TODO: cover cases when files have different number of rows
+        while ((actualNext = getNextRow(actualDatasource)) != null) {
+            cl (actualNext, getNextRow(expectedDatasource), index++)
+        }
+        
+        log.debug "$difference"
+    }
+
+    /**
+     * 
+     * @param L
+     * @return
+     */
+    def assertThat(actual) {
+        return [equalTo: { expected ->
+            try {
+                assertThat(actual, equalTo(expected))
+            }
+            catch (AssertionError e) {
+                if(failFast) {
+                    throw e
+                }
+                else {
+                    log.debug "${e.message}"
+                    difference << [index: index, actual: actual, expected: expected]
+                }
+            }
+        }]
+    }
 }
