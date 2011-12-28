@@ -15,6 +15,8 @@
 */
 package org.beedom.dslforge.integrations
 
+import java.text.ParseException;
+
 import au.com.bytecode.opencsv.CSVReader
 import groovy.util.logging.Slf4j
 import au.com.bytecode.opencsv.CSVParser
@@ -92,7 +94,7 @@ class OpenCSVCategory {
      * @param value Can have various types
      * @return
      */
-    public static void convertNamesToMaps(Map map, List names, boolean trim, value) {
+    public static void convertNamesToMaps(Map map, List names, boolean trim, String dateFormater, value) {
         String name = names.head()
         List namesTail = names.tail()
         int index = -1
@@ -110,22 +112,48 @@ class OpenCSVCategory {
             if(index == -1) {
                 if(!map[name]) { map[name] = [:] } //init Map
 
-                convertNamesToMaps(map[name], namesTail, trim, value)
+                convertNamesToMaps(map[name], namesTail, trim, dateFormater, value)
             }
             else {
                 //Dealing with repeating section, so handle it as List of Maps
                 if(!map[name]) { map[name] = [] } //init List
                 if(!map[name][index]) { map[name][index] = [:] } //init Map in the List
 
-                convertNamesToMaps(map[name][index], namesTail, trim, value)
+                convertNamesToMaps(map[name][index], namesTail, trim, dateFormater, value)
             }
         }
         else {
-            map[name] = trim && value && (value instanceof String) ? value.trim() : value
+            if (!value) {
+                //
+                map[name] = value
+            }
+            else if (value.isInteger()) {
+                map[name] = value.trim() as Integer
+            }
+            else if (((String)value).isBigInteger()) {
+                map[name] = value.trim() as BigInteger
+            }
+            else if (value.isBigDecimal()) {
+                map[name] = value.trim() as BigDecimal
+            }
+            else {
+                try {
+                    if(dateFormater) {
+                        map[name] = new Date().parse(dateFormater, value.trim())
+                    }
+                    else {
+                        map[name] = new Date().parseToStringDate(value.trim())
+                    }
+                } catch (ParseException e) {
+                    //OpenCSV always returns String
+                    map[name] = trim && value ? value.trim() : value
+                }
+            }
+            
+            log.debug "map[name] = " + map[name].dump()
         }
     }
 
-	
     /**
      *
      * @param reader
@@ -167,7 +195,7 @@ class OpenCSVCategory {
 
                 //header is a List of Lists
                 header.eachWithIndex { List names, i ->
-                    convertNamesToMaps(map, names, options.trimData, nextLine[i+skipLeftCols])
+                    convertNamesToMaps(map, names, options.trimData, options.dateFormater, nextLine[i+skipLeftCols])
                 }
 
                 log.info "map given to closure of user: $map"

@@ -38,6 +38,21 @@ class OpenCSVTest {
     }
 
     @Test
+    public void allTypeConverts() {
+        use(OpenCSVCategory) {
+            new File("src/test/data/convertedTypes.csv").openCsvEachRow(headerRows:1, dateFormater:'yyyy/MM/dd') { types, i ->
+                assert types
+                
+                assert types.string == "customer"
+                assert types.integer == 34
+                assert types.date == new Date().parse('yyyy/MM/dd', '1969/02/23')
+                assert types.bigdecimal == 89.6
+                assert types.biginteger == 12345678901234567890
+            }
+        }
+    }
+
+    @Test
     public void multiLineHeader() {
         use(OpenCSVCategory) {
             def header = new File("src/test/data/multiHeader.csv").openCsvHeader(headerRows:2)
@@ -83,6 +98,7 @@ class OpenCSVTest {
     def multiLineHeaderTester = { user, i ->
         assert user.kind
         assert user.sex
+        assert user.age
 
         assert user.contacts.address[0].purpose
         assert user.contacts.address[0].deliveryInfo
@@ -101,8 +117,6 @@ class OpenCSVTest {
             assert user.contacts.email[1].purpose == ""
             assert user.contacts.email[1].address == ""
         }
-
-        i++
     }
 
     def multiLineHeaderFile = "src/test/data/multiHeaderWithRepeat.csv"
@@ -118,21 +132,22 @@ class OpenCSVTest {
         assert header[4] == ["firstName"]
         assert header[5] == ["lastName"]
         assert header[6] == ["sex"]
-        assert header[7] == ["contacts", "address[0]", "purpose"]
-        assert header[8] == ["contacts", "address[0]", "country"]
-        assert header[9] == ["contacts", "address[0]", "countryCode"]
-        assert header[10] == ["contacts", "address[0]", "province"]
-        assert header[11] == ["contacts", "address[0]", "address1"]
-        assert header[12] == ["contacts", "address[0]", "city"]
-        assert header[13] == ["contacts", "address[0]", "postalCode"]
-        assert header[14] == ["contacts", "address[0]", "deliveryInfo"]
-        assert header[15] == ["contacts", "phone[0]", "purpose"]
-        assert header[16] == ["contacts", "phone[0]", "areaCode"]
-        assert header[17] == ["contacts", "phone[0]", "number"]
-        assert header[18] == ["contacts", "email[0]", "purpose"]
-        assert header[19] == ["contacts", "email[0]", "address"]
-        assert header[20] == ["contacts", "email[1]", "purpose"]
-        assert header[21] == ["contacts", "email[1]", "address"]
+        assert header[7] == ["age"]
+        assert header[8] == ["contacts", "address[0]", "purpose"]
+        assert header[9] == ["contacts", "address[0]", "country"]
+        assert header[10] == ["contacts", "address[0]", "countryCode"]
+        assert header[11] == ["contacts", "address[0]", "province"]
+        assert header[12] == ["contacts", "address[0]", "address1"]
+        assert header[13] == ["contacts", "address[0]", "city"]
+        assert header[14] == ["contacts", "address[0]", "postalCode"]
+        assert header[15] == ["contacts", "address[0]", "deliveryInfo"]
+        assert header[16] == ["contacts", "phone[0]", "purpose"]
+        assert header[17] == ["contacts", "phone[0]", "areaCode"]
+        assert header[18] == ["contacts", "phone[0]", "number"]
+        assert header[19] == ["contacts", "email[0]", "purpose"]
+        assert header[20] == ["contacts", "email[0]", "address"]
+        assert header[21] == ["contacts", "email[1]", "purpose"]
+        assert header[22] == ["contacts", "email[1]", "address"]
     }
 
     @Test
@@ -162,9 +177,9 @@ class OpenCSVTest {
     public void multiLineStringHeader() {
         def c = "contacts" //tests GString expression
         def headerText = """\
-,,,,,,,$c,,,,,,,,,,,,,,
-,,,,,,,address[0],,,,,,,,phone[0],,,email[0],,email[1],
-kind,userid,password,title,firstName,lastName,sex,purpose,country,countryCode,province,address1,city,postalCode,deliveryInfo,purpose,areaCode,number,purpose,address,purpose,address
+,,,,,,,,$c,,,,,,,,,,,,,,
+,,,,,,,,address[0],,,,,,,,phone[0],,,email[0],,email[1],
+kind,userid,password,title,firstName,lastName,sex,age,purpose,country,countryCode,province,address1,city,postalCode,deliveryInfo,purpose,areaCode,number,purpose,address,purpose,address
 """
         use(OpenCSVCategory) {
             def header = new String(headerText).openCsvHeader(headerRows:3)
@@ -191,7 +206,6 @@ kind,userid,password,title,firstName,lastName,sex,purpose,country,countryCode,pr
         writer << '<?xml version="1.0" encoding="UTF-8"?>'
 
         use(OpenCSVCategory) {
-
             xml.calendar
             {
                 new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipLeftCols:1, skipRightCols:1, trimData:true]) { row, i ->

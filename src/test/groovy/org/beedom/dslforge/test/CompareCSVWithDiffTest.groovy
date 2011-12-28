@@ -102,7 +102,7 @@ class CompareCSVWithDiffTest extends TestBase {
                 assert difference.size == 7
                 
                 def expect = [
-                    [index:1, actual:"31",            expected:33], 
+                    [index:1, actual:31,            expected:33], 
                     [index:1, actual:"hellobaby2",  expected:"hellobaby"], 
                     [index:1, actual:"Hugeville",   expected:"Smallville"], 
                     [index:2, actual:32,            expected:34], 
@@ -114,6 +114,8 @@ class CompareCSVWithDiffTest extends TestBase {
                 difference.eachWithIndex {actuals, i ->
                     println actuals.actual.dump()
                     println expect[i].actual.dump() 
+					println actuals.expected.dump()
+					println expect[i].expected.dump()
 
                     assert actuals.index    == expect[i].index
                     assert actuals.actual   == expect[i].actual

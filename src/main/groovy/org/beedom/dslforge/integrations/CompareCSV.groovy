@@ -102,7 +102,7 @@ class CompareCSV {
 
             ds.header.eachWithIndex {
                 List names, i ->
-                OpenCSVCategory.convertNamesToMaps(map, names, ds.options.trimData, nextLine[i+ds.options.skipLeftCols])
+                OpenCSVCategory.convertNamesToMaps(map, names, ds.options.trimData, ds.options.dateFormater, nextLine[i+ds.options.skipLeftCols])
             }
 
             log.info "map for closure: $map"
