@@ -15,7 +15,10 @@
  */
 package org.beedom.dslforge
 
-import groovy.lang.MissingPropertyException;
+import groovy.lang.MissingPropertyException
+
+import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.ImportCustomizer
 
 import java.util.regex.Pattern
 
@@ -69,7 +72,7 @@ public class DSLEngine  {
         this.context = context
         init(configFile,configEnv, scriptDir)
     }
- 
+
     public DSLEngine(Binding context, String configFile, String configEnv) {
         this.context = context
         init(configFile,configEnv, null)
@@ -84,20 +87,20 @@ public class DSLEngine  {
     public DSLEngine(String configFile, String configEnv, String scriptDir) {
         init(configFile,configEnv, scriptDir)
     }
-    
+
 
     public DSLEngine(String configFile, String configEnv) {
         init(configFile,configEnv, null)
     }
-    
-    
+
+
     /**
      * Run DSL script from a command line
      * 
      * @param args
      */
     public static void main(String[] args) {
-        
+
         def cli = new CliBuilder(usage: 'dslengine -[chedp] [file/directory name/pattern]')
 
         cli.with {
@@ -119,31 +122,31 @@ public class DSLEngine  {
             cli.usage()
             return
         }
-        
+
         def confFile
         def confEnv
         def scriptDir
         def pattern
-        
+
         if (options.c) {
-        	confFile = options.c
+            confFile = options.c
         }
 
         if (options.e) {
-        	confEnv = options.e
+            confEnv = options.e
         }
-        
+
         if (options.d) {
             scriptDir = options.d
         }
-        
+
         if (options.p) {
             pattern = options.p
         }
-        
+
         def arguments = options.arguments()
         def dse = new DSLEngine( confFile, confEnv, scriptDir )
-        
+
         if(pattern) {
             dse.run( Pattern.compile(pattern) )
         }
@@ -152,14 +155,14 @@ public class DSLEngine  {
             arguments.each { file-> dse.run(file) }
         }
     }
-    
+
     /**
      * 
      */
     public void init() {
         init(null,null,null)
     }
-    
+
     /**
      * 
      * @param configFile
@@ -169,36 +172,70 @@ public class DSLEngine  {
         if(!configEnv) {
             configEnv = "development"
         }
-        
+
         if(!configFile) {
             configFile = "conf/DSLConfig.groovy"
         }
-        
+
         if(!context) {
             context = new Binding()
         }
-        
+
         dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURI().toURL())
 
         log.info("DSL config was loaded: "+dslConfig.dump())
-        
+
         if(scriptDir) {
             scriptsHome = scriptDir
         }
         else {
             scriptsHome = dslConfig.dsl.scripts
         }
-        
+
         //enable inheritance for ExpandoMetaClass
         if(dslConfig.dsl.emcInheritance) {
             ExpandoMetaClass.enableGlobally()
         }
-        
+
         if( dslConfig.dsl.mbSchemaFiles ) {
             context.mbSchemaFiles = dslConfig.dsl.mbSchemaFiles
         }
     }
-    
+
+    def createImportConfigration() {
+        def configuration = new CompilerConfiguration()
+        def customizer = new ImportCustomizer()
+
+        if(dslConfig.dsl.imports.imports) {
+            customizer.addImports(dslConfig.dsl.imports.imports as String[])
+        }
+        if(dslConfig.dsl.imports.starImports) {
+            customizer.addStarImports(dslConfig.dsl.imports.starImports as String[])
+        }
+        if(dslConfig.dsl.imports.staticStars) {
+            customizer.addStaticStars(dslConfig.dsl.imports.staticStars as String[])
+        }
+        if(dslConfig.dsl.imports.aliasedImports) {
+            dslConfig.dsl.imports.aliasedImports.each {
+                customizer.addImport(it.key, it.value)
+            }
+        }
+        if(dslConfig.dsl.imports.staticImports) {
+            dslConfig.dsl.imports.staticImports.each {
+                customizer.addStaticImport(it[0], it[1])
+            }
+        }
+        if(dslConfig.dsl.imports.aliasedStaticImports) {
+            dslConfig.dsl.imports.aliasedStaticImports.each {
+                customizer.addStaticImport(it.key, it.value[0],it.value[1])
+            }
+        }
+
+        configuration.addCompilationCustomizers(customizer)
+
+        return configuration
+    }
+
     /**
      * 
      * @param p
@@ -218,6 +255,11 @@ public class DSLEngine  {
      */
     def run(String scriptName) {
         assert scriptsHome, "use config file or -d in command line to define the home of your scipts"
+        def config = new CompilerConfiguration()
+        
+        if(dslConfig.dsl.imports) {
+            config = createImportConfigration()
+        }
 
         if(dslConfig.dsl.defaultDelegate) {
             String dslKey = getDelegateDslKey( dslConfig.dsl.defaultDelegate );
@@ -228,13 +270,14 @@ public class DSLEngine  {
             String scriptText = new File(scriptsHome+"/"+scriptName).text
 
             //wraps the script with a Closure containing the default dslKey
-            return run( new GroovyShell().evaluate( "{->${dslKey} {${scriptText}}}" ) )
+            return run( new GroovyShell(config).evaluate( "{->${dslKey} {${scriptText}}}" ) )
         }
         else {
             //last minute initialisation of GroovyScriptEngine
             if(!gse) {
                 gse = new GroovyScriptEngine( scriptsHome, "conf" )
             }
+            gse.config = config
             def script = gse.createScript(scriptName, context)
 
             script.metaClass = createEMC( script.class, getEMCClosure() )
@@ -281,9 +324,9 @@ public class DSLEngine  {
      */
     private ExpandoMetaClass createEMC(Class clazz, Closure cl) {
         ExpandoMetaClass emc = new ExpandoMetaClass(clazz, false)
-        
+
         cl(emc)
-        
+
         emc.initialize()
         return emc
     }
@@ -311,8 +354,8 @@ public class DSLEngine  {
      */
     private String getDelegateDslKey(config) {
         Class clazz = getDelegateClazz(config)
-        String dslKeyFromConfig 
-        
+        String dslKeyFromConfig
+
         if(config instanceof Map) {
             dslKeyFromConfig = config.dslKey
         }
@@ -330,8 +373,8 @@ public class DSLEngine  {
             return clazz.simpleName.toLowerCase()
         }
     }
-    
-    
+
+
     /**
      * Converts user-friendly alias declaration to a format usable by this class
      * 
@@ -350,7 +393,7 @@ public class DSLEngine  {
             }
         }
     }
-    
+
     /**
      * Finds real method to be called for the alias method name
      * 
@@ -368,7 +411,7 @@ public class DSLEngine  {
         }
         return null
     }
-    
+
 
     /**
      * Injects a number of properties and methods into the delegate class
@@ -378,10 +421,10 @@ public class DSLEngine  {
     private void enhanceDelegateByConvention(Class clazz) {
         //Convention: Inject 'context' property in delegate class
         clazz.metaClass.getContext = {-> context }
-        
+
         //Convention: Inject 'dslAlias' property in delegate class
         clazz.metaClass.getDslAlias = {-> injectedAliases[delegate.class] }
-        
+
         //Convention: Find and call real method for the missing ones using aliases
         clazz.metaClass.methodMissing = { String name, args ->
             def alias = findAlias(delegate, name)
@@ -393,7 +436,7 @@ public class DSLEngine  {
 
                 if(methods) {
                     assert 1 == methods.size(), "Ambiguous method list found for aliasing '${name}' to '${alias}'"
-                    
+
                     //dynamically register this alias method so next time no methodMissing is thrown
                     clazz.metaClass."$name" = { Object[] varArgs ->
                         log.info("Registered alias: $name ")
@@ -416,11 +459,11 @@ public class DSLEngine  {
         }
 
         //Convention: For the missing property check if there is a method with no arguments, and call it
-        clazz.metaClass.propertyMissing = { String name -> 
+        clazz.metaClass.propertyMissing = { String name ->
             def methods = delegate.metaClass.respondsTo(delegate.class, name, null)
             if(!methods) {
                 def alias = findAlias(delegate, name)
-                
+
                 if(alias) {
                     methods = delegate.metaClass.respondsTo(delegate.class, alias, null)
                 }
@@ -495,7 +538,7 @@ public class DSLEngine  {
                 else {
                     cl.delegate = clazz.newInstance(args[0..l-2] as Object[])
                 }
-                
+
                 //if class has a sharedInstance property add it to the map
                 if(clazz.metaClass.properties.find{it.name=="sharedInstance"}) {
                     delegatesMap[clazz] = cl.delegate
@@ -541,17 +584,17 @@ public class DSLEngine  {
 
             //Add these methods in case the DSL needs to support evaluate/include
             dslConfig.dsl?.evaluate.each { evalMethod ->
-                
+
                 log.info("Adding evaluate methods to ECM: $evalMethod")
-                
+
                 emc."$evalMethod" = { String file -> run(file) }
                 emc."$evalMethod" = { Closure cl -> run(cl) }
             }
-            
+
             dslConfig.dsl?.delegates.each { delegateConfig ->
-                
+
                 log.info("dslConfig.dsl.delegates.each: $delegateConfig")
-                
+
                 def clazz   = getDelegateClazz(delegateConfig)
                 def dslKey  = getDelegateDslKey(delegateConfig)
                 def methods = [dslKey]
@@ -565,9 +608,9 @@ public class DSLEngine  {
                 if(aliases[dslKey]) {
                     methods += aliases[dslKey]
                 }
-                
+
                 log.info("ECM method names including aliases: $methods")
-                
+
                 enhanceDelegateByConvention(clazz)
 
                 //Adds method to ECM which instantiates the delegates and runs the closure pseed as input parameter

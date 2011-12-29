@@ -167,13 +167,14 @@ class OpenCSVCategory {
         int skipLeftCols  = options.skipLeftCols
         int skipRightCols = options.skipRightCols
         List header       = options.header
+        int index = 0
 
         //CSV has no header
         if(!headerRows && !header) {
             log.warn "No header was specified so reverting to original openCsv behaviour"
             //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {
-                cl(nextLine)
+                cl(nextLine,index++)
             }
         }
         else {
@@ -187,7 +188,6 @@ class OpenCSVCategory {
             assert header, "no header is availalle"
 
             def map = [:]
-            def index = 0
 
             //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {

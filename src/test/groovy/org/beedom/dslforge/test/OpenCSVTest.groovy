@@ -18,7 +18,7 @@ class OpenCSVTest {
     @Test
     public void noHeaderValues() {
         use(OpenCSVCategory) {
-            new File("src/test/data/noHeaderAddress.csv").openCsvEachRow { address ->
+            new File("src/test/data/noHeaderAddress.csv").openCsvEachRow(headerRows:0) { address, i ->
                 assert address[0]
                 assert address[1]
                 assert address[2]
