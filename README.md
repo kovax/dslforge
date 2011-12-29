@@ -163,6 +163,26 @@ and [DefaultDelegate.feature](https://github.com/kovax/dslforge/blob/master/src/
 
 **IMPORTANT: Default delegate only works for Scripts i.e. NO support for Closures YET!!!**
 
+
+Imports can be added to Scripts by the integration with ImportCostumizer 
+----------------------------------------------------
+
+Add the entries like bellow to the 
+[DSLConfig.groovy](https://github.com/kovax/dslforge/blob/master/src/test/conf/ImputCustomizerTestConfig.groovy) file:
+
+    imports {
+        imports = [groovytools.builder.MetaBuilder.name]
+        starImports = ['org.beedom.dslforge.test.beans']
+        aliasedImports = [Customer: org.beedom.dslforge.test.beans.User.name, Cart: org.beedom.dslforge.test.beans.Basket.name]
+        staticStars = [Math.name, org.hamcrest.MatcherAssert.name, org.hamcrest.Matchers.name]
+        staticImports = [[Locale.name,'FRENCH']]
+        aliasedStaticImports = [France:[Locale.name,'FRENCH']]
+    }
+
+Check the [ImputCustomizerTestScript.groovy](https://github.com/kovax/dslforge/blob/master/src/test/scripts/ImputCustomizerTestScript.groovy)
+to see the import in 'actions'.
+
+
 Future work
 ----------------------------------------------------------------
 
