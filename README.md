@@ -168,7 +168,7 @@ Imports can be added to Scripts by the integration with ImportCostumizer
 ----------------------------------------------------
 
 Add the entries like bellow to the 
-[DSLConfig.groovy](https://github.com/kovax/dslforge/blob/master/src/test/conf/ImputCustomizerTestConfig.groovy) file:
+[DSLConfig.groovy](https://github.com/kovax/dslforge/blob/master/src/test/conf/InputCustomizerTestConfig.groovy) file:
 
     imports {
         imports = [groovytools.builder.MetaBuilder.name]
@@ -179,7 +179,7 @@ Add the entries like bellow to the
         aliasedStaticImports = [France:[Locale.name,'FRENCH']]
     }
 
-Check the [ImputCustomizerTestScript.groovy](https://github.com/kovax/dslforge/blob/master/src/test/scripts/ImputCustomizerTestScript.groovy)
+Check the [InputCustomizerTestScript.groovy](https://github.com/kovax/dslforge/blob/master/src/test/scripts/InputCustomizerTestScript.groovy)
 to see the import in 'actions'.
 
 
