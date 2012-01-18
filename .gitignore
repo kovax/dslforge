@@ -1,6 +1,5 @@
 /build
-/build
-/build
-/.gradle
 /.settings
-/.groovy
+/.project
+/.classpath
+/.gradle
