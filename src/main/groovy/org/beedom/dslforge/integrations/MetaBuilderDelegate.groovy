@@ -15,7 +15,7 @@
 */
 package org.beedom.dslforge.integrations
 
-import java.util.logging.Logger;
+import groovy.util.logging.Slf4j
 
 import org.beedom.dslforge.BindingConvention;
 
@@ -26,10 +26,8 @@ import groovytools.builder.MetaBuilder
  * 
  * @author zs.myth
  */
+@Slf4j
 class MetaBuilderDelegate {
-
-    protected static Logger log = Logger.getLogger(MetaBuilderDelegate.class.getName());
-    
 	def initialised = false
 	
 	def processClosure(Closure cl) {
@@ -38,6 +36,7 @@ class MetaBuilderDelegate {
 	    	context.metaBuilder = new MetaBuilder()
 
             context.mbSchemaFiles.each { String fPath ->
+                log.debug "MetaBuilder schema file: $fPath"
                 new GroovyShell( context ).evaluate( new File(fPath) )
             }
 	    	initialised = true

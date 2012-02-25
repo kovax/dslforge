@@ -15,17 +15,13 @@
  */
 package org.beedom.dslforge
 
+import groovy.util.logging.Slf4j
 import groovy.lang.MissingPropertyException
 
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 
 import java.util.regex.Pattern
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory
-import groovy.util.logging.*;
-
 
 /**
  * 
@@ -37,8 +33,8 @@ public class DSLEngine  {
 
     private ConfigObject dslConfig
     private aliases = [:]
-    private Binding context
-    private String scriptsHome
+    private Binding context = null
+    private String scriptsHome = ""
 
     private GroovyScriptEngine gse
 
@@ -254,6 +250,7 @@ public class DSLEngine  {
      * @return returns the Object which is returned by the script
      */
     def run(String scriptName) {
+        log.info("running script file: $scriptName")
         assert scriptsHome, "use config file or -d in command line to define the home of your scipts"
         def config = new CompilerConfiguration()
         
@@ -275,7 +272,7 @@ public class DSLEngine  {
         else {
             //last minute initialisation of GroovyScriptEngine
             if(!gse) {
-                gse = new GroovyScriptEngine( scriptsHome, "conf" )
+                gse = new GroovyScriptEngine( scriptsHome )
             }
             gse.config = config
             def script = gse.createScript(scriptName, context)

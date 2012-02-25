@@ -18,9 +18,9 @@ package org.beedom.dslforge.integrations
 import java.text.ParseException;
 
 import au.com.bytecode.opencsv.CSVReader
-import groovy.util.logging.Slf4j
 import au.com.bytecode.opencsv.CSVParser
 
+import groovy.util.logging.Slf4j
 
 /**
  *
