@@ -90,6 +90,7 @@ class DelegateTests extends TestBase {
                 adott "egy vásárló, aki azonosította magát"
                 és "a vásárló a kosarat véglegesítettete egy termékkel"
                 amikor "a vásárló törölte a terméket a kosárból"
+                és "a vásárló a kosarat véglegesítettete"
                 akkor "a kosár üres lesz"
             }
 

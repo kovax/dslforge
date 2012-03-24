@@ -7,19 +7,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.*;
 
-class DSLContextTests {
-
-    def timeStamp
-    def context
-    def dsle
-
-    @Before
-    public void before () {
-        timeStamp = System.currentTimeMillis()
-        context = new Binding()
-        dsle = new DSLEngine(context)
-    }
-
+class DSLContextTests extends TestBase {
 
     @Test
     public void testContextShare() {

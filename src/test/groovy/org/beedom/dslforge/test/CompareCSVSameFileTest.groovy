@@ -12,12 +12,12 @@ import org.junit.Test
  */
 class CompareCSVSameFileTest extends TestBase {
 
-	def dsle
 	def csv = "src/test/data/multiHeaderWithRepeat.csv"
 
 	@Before
-	public void before () {
-		dsle = new DSLEngine(new Binding(), "src/test/conf/CompareTestConfig.groovy", "development")
+	public void init () {
+        configFile = "src/test/conf/CompareTestConfig.groovy"
+        super.init()
 	}
 
 	@Test

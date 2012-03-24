@@ -12,14 +12,14 @@ import org.junit.Test
  */
 class CompareCSVWithDiffTest extends TestBase {
 
-	def dsle
 	def csv = "src/test/data/multiHeaderWithRepeat.csv"
 	def csv2 = "src/test/data/multiHeaderWithRepeatv2.csv"
 
-	@Before
-	public void before () {
-		dsle = new DSLEngine(new Binding(), "src/test/conf/CompareTestConfig.groovy", "development")
-	}
+    @Before
+    public void init () {
+        configFile = "src/test/conf/CompareTestConfig.groovy"
+        super.init()
+    }
 
     @Test(expected=AssertionError)
     public void useGroovyAssert() {

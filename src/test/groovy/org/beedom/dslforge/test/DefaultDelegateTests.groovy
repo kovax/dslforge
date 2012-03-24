@@ -9,7 +9,7 @@ class DefaultDelegateTests extends TestBase {
 
     @Before
     public void init() {
-        dsle = new DSLEngine((Binding)context, "src/test/conf/DefaultDelegateTestConfig.groovy", "development")
+        configFile = "src/test/conf/DefaultDelegateTestConfig.groovy"
         super.init()
     }
     

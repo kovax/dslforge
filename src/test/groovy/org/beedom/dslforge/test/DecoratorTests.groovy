@@ -7,17 +7,14 @@ import org.beedom.dslforge.test.beans.Product;
 import org.junit.Before;
 import org.junit.Test;
 
-class DecoratorTests {
+import com.sun.security.auth.login.ConfigFile;
 
-    def timeStamp
-    def context
-    def dsle
+class DecoratorTests extends TestBase {
 
     @Before
-    public void before () {
-        timeStamp = System.currentTimeMillis()
-        context = new Binding()
-        dsle = new DSLEngine(context, "src/test/conf/DecoratorTestConfig.groovy", "development")
+    public void init () {
+        configFile =  "src/test/conf/DecoratorTestConfig.groovy"
+        super.init()
     }
     
     @Test
