@@ -31,62 +31,27 @@ import java.util.regex.Pattern
 @Slf4j
 public class DSLEngine  {
 
-    private ConfigObject dslConfig
-    private aliases = [:]
-    private Binding context = null
+    private String configFile = ""
+    private String configEnv = ""
     private String scriptsHome = ""
+    
+    private ConfigObject   dslConfig = null
+    private Binding        context = null
+    private ReportRenderer reporter = null
 
-    private GroovyScriptEngine gse
-
+    private GroovyScriptEngine gse = null
+    private aliases = [:]
+    
     private def injectedAliases = Collections.synchronizedMap([:])
     private def delegatesMap = Collections.synchronizedMap([:])
-
-    /**
-     * 
-     */
-    public DSLEngine() {
+   
+    public DSLEngine(Map map) {
+        if(map) {
+            for (entry in map) {
+                this."${entry.key}" = entry.value
+            }
+        }
         init()
-    }
-
-    /**
-     * 
-     * @param context
-     */
-    public DSLEngine(Binding context) {
-        this.context = context
-        init()
-    }
-
-    /**
-     * 
-     * @param context
-     * @param configFile
-     * @param configEnv
-     * @param scriptDir
-     */
-    public DSLEngine(Binding context, String configFile, String configEnv, String scriptDir) {
-        this.context = context
-        init(configFile,configEnv, scriptDir)
-    }
-
-    public DSLEngine(Binding context, String configFile, String configEnv) {
-        this.context = context
-        init(configFile,configEnv, null)
-    }
-
-    /**
-     * 
-     * @param configFile
-     * @param configEnv
-     * @param scriptDir
-     */
-    public DSLEngine(String configFile, String configEnv, String scriptDir) {
-        init(configFile,configEnv, scriptDir)
-    }
-
-
-    public DSLEngine(String configFile, String configEnv) {
-        init(configFile,configEnv, null)
     }
 
 
@@ -124,31 +89,20 @@ public class DSLEngine  {
         def scriptDir
         def pattern
 
-        if (options.c) {
-            confFile = options.c
-        }
-
-        if (options.e) {
-            confEnv = options.e
-        }
-
-        if (options.d) {
-            scriptDir = options.d
-        }
-
-        if (options.p) {
-            pattern = options.p
-        }
+        if (options.c) { confFile  = options.c }
+        if (options.e) { confEnv   = options.e }
+        if (options.d) { scriptDir = options.d }
+        if (options.p) { pattern   = options.p }
 
         def arguments = options.arguments()
-        def dse = new DSLEngine( confFile, confEnv, scriptDir )
+        def dsl = new DSLEngine( configFile: confFile, configEnv: confEnv, scriptsHome: scriptDir )
 
         if(pattern) {
-            dse.run( Pattern.compile(pattern) )
+            dsl.run( Pattern.compile(pattern) )
         }
 
         if(arguments) {
-            arguments.each { file-> dse.run(file) }
+            arguments.each { file-> dsl.run(file) }
         }
     }
 
@@ -156,35 +110,20 @@ public class DSLEngine  {
      * 
      */
     public void init() {
-        init(null,null,null)
-    }
+        if(!dslConfig) {
+            if(!configFile) { configFile = "conf/DSLConfig.groovy" }
+            if(!configEnv)  { configEnv  = "development" }
 
-    /**
-     * 
-     * @param configFile
-     * @param configEnv
-     */
-    public void init(String configFile, String configEnv, String scriptDir) {
-        if(!configEnv) {
-            configEnv = "development"
+            log.debug("Loading config:$configFile for environment:$configEnv")
+            dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURI().toURL())
         }
-
-        if(!configFile) {
-            configFile = "conf/DSLConfig.groovy"
-        }
-
+        log.debug("DSL config: "+dslConfig.dump())
+        
         if(!context) {
             context = new Binding()
         }
 
-        dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURI().toURL())
-
-        log.info("DSL config was loaded: "+dslConfig.dump())
-
-        if(scriptDir) {
-            scriptsHome = scriptDir
-        }
-        else {
+        if(!scriptsHome) {
             scriptsHome = dslConfig.dsl.scripts
         }
 
@@ -247,15 +186,16 @@ public class DSLEngine  {
      * Run script by enhancing it with EMC instance
      * 
      * @param scriptName the name of the script file to be enhanced and run
-     * @return returns the Object which is returned by the script
+     * @return returns the Object(s) returned by the script
      */
     def run(String scriptName) {
         log.info("running script file: $scriptName")
+        
         assert scriptsHome, "use config file or -d in command line to define the home of your scipts"
-        def config = new CompilerConfiguration()
+        def compConfig = new CompilerConfiguration()
         
         if(dslConfig.dsl.imports) {
-            config = createImportConfigration()
+            compConfig = createImportConfigration()
         }
 
         if(dslConfig.dsl.defaultDelegate) {
@@ -267,26 +207,27 @@ public class DSLEngine  {
             String scriptText = new File(scriptsHome+"/"+scriptName).text
 
             //wraps the script with a Closure containing the default dslKey
-            return run( new GroovyShell(config).evaluate( "{->${dslKey} {${scriptText}}}" ) )
+            return run( new GroovyShell(compConfig).evaluate( "return {->${dslKey} {${scriptText}}}" ) )
         }
         else {
             //last minute initialisation of GroovyScriptEngine
             if(!gse) {
                 gse = new GroovyScriptEngine( scriptsHome )
             }
-            gse.config = config
+            gse.config = compConfig
             def script = gse.createScript(scriptName, context)
 
             script.metaClass = createEMC( script.class, getEMCClosure() )
 
             if(dslConfig.dsl.categories) {
-                use(dslConfig.dsl.categories) { script.run() }
+                use(dslConfig.dsl.categories) { 
+                    return script.run()
+                }
             }
             else {
-                script.run()
+                return script.run()
             }
         }
-
     }
 
 
@@ -305,10 +246,12 @@ public class DSLEngine  {
         cl.resolveStrategy = Closure.DELEGATE_FIRST
 
         if(dslConfig.dsl.categories) {
-            use(dslConfig.dsl.categories) { cl() }
+            use(dslConfig.dsl.categories) { 
+                return cl()
+            }
         }
         else {
-            cl()
+            return cl()
         }
     }
 
@@ -416,11 +359,14 @@ public class DSLEngine  {
      * @param clazz the delegate class
      */
     private void enhanceDelegateByConvention(Class clazz) {
-        //Convention: Inject 'context' property in delegate class
-        clazz.metaClass.getContext = {-> context }
+        //Convention: Inject 'context' property into delegate class
+        clazz.metaClass.getContext = {-> return context }
 
-        //Convention: Inject 'dslAlias' property in delegate class
-        clazz.metaClass.getDslAlias = {-> injectedAliases[delegate.class] }
+        //Convention: Inject 'reporter' property into delegate class
+        clazz.metaClass.getReporter = {-> return reporter }
+
+        //Convention: Inject 'dslAlias' property into delegate class
+        clazz.metaClass.getDslAlias = {-> return injectedAliases[delegate.class] }
 
         //Convention: Find and call real method for the missing ones using aliases
         clazz.metaClass.methodMissing = { String name, args ->
