@@ -15,21 +15,21 @@ class FeatureDelegate {
     String description = ""
     
 	public FeatureDelegate() {
-        initDelegate(null)
+        init(null)
     }
 
     public FeatureDelegate(String desc) {
         println "FeatureDelegate()"
         
-        initDelegate(desc)
+        init(desc)
     }
     
-    def initDelegate(String desc) {
+    def init(String desc) {
         if(desc) {
             description = desc
         }
         nesting++
-        println "FeatureDelegate.init(): $description $nesting."
+        println "FeatureDelegate.init(): $description nesting: $nesting."
     }
     
     def destroy() {
@@ -37,8 +37,8 @@ class FeatureDelegate {
     }
 
     def doThisAlways(String method, String desc, Closure cl ) {
-        if(dslAlias) println "Feature '$description': $dslAlias($method) - $desc"
-        else println "Feature '$description': $method - $desc"
+        if(dslAlias) println "Feature '$description': $dslAlias($method) - $desc , nesting: $nesting"
+        else println "Feature '$description': $method - $desc , nesting: $nesting"
 
         if(cl && !context.dryRunScenario) {
             cl()

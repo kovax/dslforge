@@ -16,13 +16,18 @@ class TestBase {
     def configFile = ""
     def configEnv = "development"
     
+    def file
+    def writer
+    def reporter
+
     @Before
 	public void init() {
         timeStamp = System.currentTimeMillis()
-		context = new Binding(junit: "junit4")
+        
+        if(!context) { context = new Binding(junit: "junit4") }
         
         if(!dsle) {
-            dsle = new DSLEngine(context: context, configFile: configFile, configEnv: configEnv)
+            dsle = new DSLEngine(context: context, configFile: configFile, configEnv: configEnv, reporter: reporter)
         }
 	}
 }

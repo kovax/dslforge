@@ -22,6 +22,8 @@ class WebShopDelegate extends SimpleReportingDelegate  {
 	}
 
 	def login(String id, String pwd) {
+        writeMethod("login", "user id:$id pwd:$pwd")
+            
         if(dslAlias) println "$dslAlias/login - id:$id pwd:$pwd"
         else println "login - id:$id pwd:$pwd"
 	    

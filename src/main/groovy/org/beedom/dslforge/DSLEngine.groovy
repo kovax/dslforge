@@ -23,6 +23,7 @@ import org.codehaus.groovy.control.customizers.ImportCustomizer
 
 import java.util.regex.Pattern
 
+
 /**
  * 
  * 
@@ -44,7 +45,11 @@ public class DSLEngine  {
     
     private def injectedAliases = Collections.synchronizedMap([:])
     private def delegatesMap = Collections.synchronizedMap([:])
-   
+
+    /**
+     * 
+     * @param map
+     */
     public DSLEngine(Map map) {
         if(map) {
             for (entry in map) {
@@ -106,6 +111,7 @@ public class DSLEngine  {
         }
     }
 
+
     /**
      * 
      */
@@ -117,6 +123,7 @@ public class DSLEngine  {
             log.debug("Loading config:$configFile for environment:$configEnv")
             dslConfig = new ConfigSlurper(configEnv).parse(new File(configFile).toURI().toURL())
         }
+
         log.debug("DSL config: "+dslConfig.dump())
         
         if(!context) {
@@ -171,6 +178,7 @@ public class DSLEngine  {
         return configuration
     }
 
+
     /**
      * 
      * @param p
@@ -181,6 +189,7 @@ public class DSLEngine  {
             run(f.name)
         }
     }
+
 
     /**
      * Run script by enhancing it with EMC instance
@@ -271,6 +280,7 @@ public class DSLEngine  {
         return emc
     }
 
+
     /**
      * 
      * @param config
@@ -283,34 +293,42 @@ public class DSLEngine  {
         else if(config instanceof Map) {
             return config.clazz
         }
+        else {
+            throw new RuntimeException("Type of $config must be Class or Map")
+        }
     }
+
 
     /**
      * Convention: Get the dslKey from class or configuration entry. If none exists
-     * use the lower-case name of the class removing the Delegate from the end if needed
+     * use the lower-case name of the class removing the Delegate from the end if needed,
+     * and also inject the dslKey property
      * 
      * @param config the object retrieved from configuration object
      * @return the dslKey string
      */
     private String getDelegateDslKey(config) {
         Class clazz = getDelegateClazz(config)
-        String dslKeyFromConfig
-
-        if(config instanceof Map) {
-            dslKeyFromConfig = config.dslKey
-        }
 
         if(clazz.metaClass.properties.find{it.name=="dslKey"} && clazz.dslKey) {
             return clazz.dslKey
         }
-        else if( dslKeyFromConfig ) {
-            return dslKeyFromConfig
-        }
-        else if(clazz.simpleName.endsWith("Delegate")) {
-            return clazz.simpleName.substring(0,clazz.simpleName.indexOf("Delegate")).toLowerCase()
-        }
         else {
-            return clazz.simpleName.toLowerCase()
+            String key
+
+            if(config instanceof Map) {
+                key = config.dslKey
+            }
+            else if(clazz.simpleName.endsWith("Delegate")) {
+                key = clazz.simpleName.substring(0,clazz.simpleName.indexOf("Delegate")).toLowerCase()
+            }
+            else {
+                key = clazz.simpleName.toLowerCase()
+            }
+
+            //TODO: investigate why injecting dslKey crashes loads of tests
+            //clazz.metaClass.getDslKey = {-> return key }
+            return key
         }
     }
 
@@ -334,10 +352,11 @@ public class DSLEngine  {
         }
     }
 
+
     /**
      * Finds real method to be called for the alias method name
      * 
-     * @param dslKey key defined in delegate class
+     * @param delegate
      * @param aliasName the alias name of the method
      * @return
      */
@@ -363,7 +382,9 @@ public class DSLEngine  {
         clazz.metaClass.getContext = {-> return context }
 
         //Convention: Inject 'reporter' property into delegate class
-        clazz.metaClass.getReporter = {-> return reporter }
+        if(reporter) {
+            clazz.metaClass.getReporter = {-> return reporter }
+        }
 
         //Convention: Inject 'dslAlias' property into delegate class
         clazz.metaClass.getDslAlias = {-> return injectedAliases[delegate.class] }
@@ -420,6 +441,7 @@ public class DSLEngine  {
         }
     }
 
+
     /**
      * Returns a closure which calls processClosure() method of the delegate class to execute
      * the closure defined in the DSL script
@@ -445,31 +467,36 @@ public class DSLEngine  {
         }
     }
 
+
     /**
      * Returns the closure which executes the closure defined in the DSL script by delegating
-     * the missing methods to the delegate class
+     * the missing methods to the delegate class. The closure contains instantiation of the delegate class.
      * 
      * @param clazz the delegate class
+     * @param method the delegate method, used to support aliasing
      * @return closure to initialise the delegate instance
      */
-    private Closure getDelegateClosure(Class clazz) {
+    private Closure getDelegateClosure(Class clazz, String method) {
         return { Object[] args ->
             assert args, "Arguments of closure in DSL must not be empty"
             def l = args.length
 
-            assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
+            assert (args[l-1] instanceof Closure), "Last argument must be closure"
             Closure cl = (Closure)args[l-1]
 
             //if class has a sharedInstance property the delegate could be in the map
             def delegateInstance = delegatesMap[clazz]
 
+            //getDSLAlias() uses this map
+            injectedAliases[clazz] = method
+
             //sharedInstance already exists so call its init() method
             if(delegateInstance) {
                 if(l==1) {
-                    delegateInstance.init()
+                    delegateInstance.initDelegate()
                 }
                 else {
-                    delegateInstance.init(args[0..l-2])
+                    delegateInstance.initDelegate(args[0..l-2])
                 }
                 cl.delegate = delegateInstance
             }
@@ -482,36 +509,52 @@ public class DSLEngine  {
                     cl.delegate = clazz.newInstance(args[0..l-2] as Object[])
                 }
 
-                //if class has a sharedInstance property add it to the map
+                //if class has a sharedInstance property add the class to the delegatesMap
                 if(clazz.metaClass.properties.find{it.name=="sharedInstance"}) {
                     delegatesMap[clazz] = cl.delegate
                 }
+            }
+            
+            //getDSLAlias() uses this map
+            injectedAliases[clazz] = null
+
+            if(clazz.metaClass.properties.find{it.name=="delegateMethods"}) {
+                cl.delegate.addDelegateMethods(clazz.delegateMethods)
             }
 
             cl.resolveStrategy = Closure.DELEGATE_FIRST
             cl()
 
+            if(clazz.metaClass.methods.find{it.name=="destroyDelegate"}) {
+                injectedAliases[clazz] = method
+                cl.delegate.destroyDelegate()
+                injectedAliases[clazz] = null
+            }
+
             return cl.delegate
         }
     }
+
 
     /**
      * Calls the appropriate method which creates the closure to implement the method
      * which initialise the delegate instance
      *
      * @param clazz the delegate class
+     * @param method the delegate method, used to support aliasing
      * @return closure to initialise the delegate instance
      */
-    private Closure getMethodClosure(Class clazz) {
+    private Closure getMethodClosure(Class clazz, String method) {
         if(clazz.metaClass.methods.find {it.name == "processClosure"}) {
             //Convention: delegate class have processClosure() method to processes the content of the closure
             return getProcessClosure(clazz)
         }
         else {
             //Convention: the closure is executed, and all unknown methods are delegated to the delegate instance
-            return getDelegateClosure(clazz)
+            return getDelegateClosure(clazz, method)
         }
     }
+    
 
     /**
      * Creates the closure to configure the EMC
@@ -558,7 +601,7 @@ public class DSLEngine  {
 
                 //Adds method to ECM which instantiates the delegates and runs the closure pseed as input parameter
                 methods.each { method ->
-                    emc."$method" = getMethodClosure(clazz)
+                    emc."$method" = getMethodClosure(clazz, method)
                 }
             }
         }
