@@ -2,7 +2,7 @@ def methodMissing(String name, args) {
     def bddMethods = ["feature","in_order","as_a","i_want","scenario", "given", "when", "then", "and", "but"]
 
     if (bddMethods.contains(name)) {
-        print "$name ${args[0]}"
+        print "$name '${args[0]}'"
 
         if (args.length == 1) {
             println " (map)"
@@ -12,9 +12,6 @@ def methodMissing(String name, args) {
         else if (args.length == 2) {
             println " (call)"
             return args[1]()
-        }
-        else {
-            throw new MissingMethodException(name, this.class, args)
         }
     }
 
@@ -36,7 +33,11 @@ feature "The Simplest BDD implementation ever" body {
             bdd++
         }
 
-        when "a dummy event" actions {
+        when "a dummy event with acions" actions {
+            bdd++
+        }
+
+        when "a dummy event", {
             bdd++
         }
 
@@ -53,8 +54,9 @@ feature "The Simplest BDD implementation ever" body {
         but "it shall stay groovy"
     }
 
-    assert bdd == 4
+    assert bdd == 5
 
+/*
     scenario "do some dummy stuff with comma", {
 
         given "a dummy context", {
@@ -70,6 +72,6 @@ feature "The Simplest BDD implementation ever" body {
         }
     }
 
-    assert bdd == 7
-
+    assert bdd == 8
+*/
 }

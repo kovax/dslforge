@@ -1,73 +1,44 @@
-class Scenario {
-    def bddMethods = ["given", "when", "then", "and", "but"]
+import java.util.List;
 
-    def methodMissing(String name, args) {
-        if (bddMethods.contains(name)) {
-            println "S $name $args"
-            if (args.length == 1) {
-                if(args[0] instanceof Closure) {
-                    return args[0]()
-                }
-                else {
-                    return [:].withDefault { key -> { cl -> cl() } }
-                }
+abstract class Delegate {
+    def addDelegateMethods(List methods) {
+        methods.each { method ->
+            this.metaClass."$method" = { String desc ->
+                println "$method $desc"
+                return [:].withDefault { key -> return { cl -> return cl() } }
             }
-            else if (args.length == 2) {
-                return args[1]()
+
+            this.metaClass."$method" = { String desc, Closure cl ->
+                println "$method $desc"
+                return cl()
             }
         }
-
-        throw new MissingMethodException(name, this.class, args)
     }
 }
 
+class Scenario extends Delegate {
+    def bddMethods = ["given", "when", "then", "and", "but"]
+}
 
-class Feature {
+
+class Feature extends Delegate {
     def bddMethods = ["in_order", "as_a", "i_want"]
-
-    def methodMissing(String name, args) {
-        println "F $name $args"
-
-        if (bddMethods.contains(name)) {
-            if (args.length == 1) {
-                return [:].withDefault { key -> { cl -> cl() } }
-            }
-            else if (args.length == 2) {
-                return args[1]()
-            }
-        }
-        else {
-            Closure cl
-            if( name == "scenario" ) {
-                cl = args[1]
-            }
-            else {
-                //enable Spock like methods
-                println "F assume it is scenario: $name"
-                cl = args[0]
-            }
-
-            cl.delegate = new Scenario()
-            cl.resolveStrategy = Closure.DELEGATE_FIRST
-            return cl()
-        }
-
-        throw new MissingMethodException(name, this.class, args)
-    }
 }
 
 
 def methodMissing(String name, args) {
     println "$name $args"
 
-    if (name == "feature") {
-        Closure cl = args[1]
-        cl.delegate = new Feature()
-        cl.resolveStrategy = Closure.DELEGATE_FIRST
-        return cl()
+    Closure cl = args[args.length-1]
+    if (name == "scenario") {
+        cl.delegate = new Scenario()
     }
-
-    throw new MissingMethodException(name, this.class, args)
+    else {
+        cl.delegate = new Feature()
+    }
+    cl.delegate.addDelegateMethods(cl.delegate.bddMethods)
+    cl.resolveStrategy = Closure.DELEGATE_FIRST
+    return cl()
 }
 
 
