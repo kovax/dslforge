@@ -25,23 +25,40 @@ class SimpleRenderer implements ReportRenderer {
 
     private int level = 0
 
-    
+    /**
+     * 
+     * @param w
+     * @param t
+     */
     public SimpleRenderer(Writer w, ReportType t) {
         writer = w
         type = t
     }
 
 
-    private void printTabs(int level) {
-        (level*tabSize).times { writer.print(" ") }
-    }
-
-  
+    /**
+     * 
+     * @param t
+     * @return
+     */
     public static String getFileExt(ReportType t) {
         return t.toString().toLowerCase()
     }
 
 
+    /**
+     * 
+     * @param level
+     */
+    private void printTabs(int level) {
+        //TODO: is this the best way to print tabs????
+        (level*tabSize).times { writer.print(" ") }
+    }
+  
+
+    /**
+     * 
+     */
     public void openContext(String clazz, String context, String desc) {
         log.debug "$type rendering(open  level $level): '$clazz: $context $desc'"
 
@@ -50,10 +67,12 @@ class SimpleRenderer implements ReportRenderer {
             writer.println "<${clazz} context='$context' description='$desc'>"
         }
         else {
+            //Add new line at the very beginning for TXT report
             if(type == ReportType.TXT && level > 0) { writer.println() }
 
-            writeIt(clazz, context, desc )
+            writeAllExceptXML(clazz, context, desc )
 
+            //Add new line after each context opened for TXT report
             if(type == ReportType.TXT) { writer.println() }
         }
 
@@ -61,6 +80,9 @@ class SimpleRenderer implements ReportRenderer {
     }
 
 
+    /**
+     * 
+     */
     public void closeContext(String clazz, String context) {
         level--
         log.debug "$type rendering(close level $level): '$clazz: $context'"
@@ -70,11 +92,14 @@ class SimpleRenderer implements ReportRenderer {
             writer.println "</${clazz}>"
         }
         else if(type == ReportType.TXT) {
-            writer.println ""
+            writer.println()
         }
     }
-    
 
+
+    /**
+     * 
+     */
     public void writeMethod(String clazz, String method, String desc ) {
         log.debug "$type rendering(mehod level $level): '$clazz: $method $desc'"
         
@@ -83,12 +108,18 @@ class SimpleRenderer implements ReportRenderer {
             writer.println "<${method}>$desc</${method}>"
         }
         else {
-            writeIt(clazz, method, desc )
+            writeAllExceptXML(clazz, method, desc )
         }
     }
 
 
-    private void writeIt(String clazz, String method, String desc ) {
+    /**
+     * 
+     * @param clazz
+     * @param method
+     * @param desc
+     */
+    private void writeAllExceptXML(String clazz, String method, String desc ) {
         if(type == ReportType.HTML) {
             writer.println "<h${level+2}>$method $desc</h${level+2}> "
         }
@@ -111,6 +142,7 @@ class SimpleRenderer implements ReportRenderer {
             log.error "NOT IMPLEMENTED"
         }
         else {
+            //
             printTabs(level)
             writer.println "$method $desc"
         }

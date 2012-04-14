@@ -24,7 +24,7 @@ class ReportingDelegateTests extends TestBase {
 
         new File("build/reports/beedriven").mkdirs()
 
-        file = new File("build/reports/beedriven/ReportingDelegateTests.${name.getMethodName()}.$reportType")
+        file = new File("build/reports/beedriven/ReportingDelegateTests.${name.getMethodName()}.${SimpleRenderer.getFileExt(reportType)}")
         file.createNewFile()
         writer = new PrintWriter(new BufferedWriter(new FileWriter(file)))
         reporter = new SimpleRenderer(writer, reportType)

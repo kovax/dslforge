@@ -35,9 +35,7 @@ abstract class SimpleReportingDelegate {
     public void initDelegate(String desc) {
         description = desc
         
-        if( checkReporter() ) {
-            reporter.openContext(dslKey, dslAlias ?: dslKey, description)
-        }
+        if(checkReporter()) { reporter.openContext(dslKey, dslAlias ?: dslKey, description) }
     }
 
     
