@@ -12,26 +12,27 @@ interface ReportRenderer {
     
     /**
      * 
-     * @param clazz
-     * @param context
+     * @param dslKey
+     * @param alias
      * @param desc
      */
-    public void openContext(String clazz, String context, String desc);
+    public void openContext(String dslKey, String alias, String desc);
 
     
     /**
      * 
-     * @param clazz
+     * @param dslKey
+     * @param alias
      * @param method
      * @param desc
      */
-    public void writeMethod(String clazz, String method, String desc);
+    public void writeMethod(String dslKey, String method, String alias, String desc);
 
 
     /**
      * 
-     * @param clazz
-     * @param context
+     * @param dslKey
+     * @param alias
      */
-    public void closeContext(String clazz, String context);
+    public void closeContext(String dslKey, String alias);
 }

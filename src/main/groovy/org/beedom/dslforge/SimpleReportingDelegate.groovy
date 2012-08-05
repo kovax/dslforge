@@ -11,13 +11,17 @@ import java.util.List;
  *
  */
 @Slf4j
-abstract class SimpleReportingDelegate {
+public class SimpleReportingDelegate {
 
     String description = ""
 
     static def sharedInstance
-    
+
  
+    /**
+     * 
+     * @return
+     */
     protected boolean checkReporter() {
         if( this.metaClass.properties.find{it.name=="reporter"} && reporter ) {
             return true
@@ -28,14 +32,15 @@ abstract class SimpleReportingDelegate {
         }
     }
 
+
     /**
      * 
-     * @param name
+     * @param desc
      */
     public void initDelegate(String desc) {
         description = desc
         
-        if(checkReporter()) { reporter.openContext(dslKey, dslAlias ?: dslKey, description) }
+        if(checkReporter()) { reporter.openContext(dslKey, dslAlias, description) }
     }
 
     
@@ -43,7 +48,7 @@ abstract class SimpleReportingDelegate {
      * 
      */
     public void destroyDelegate() {
-        if(checkReporter()) { reporter.closeContext(dslKey, dslAlias ?: dslKey) }
+        if(checkReporter()) { reporter.closeContext(dslKey, dslAlias) }
     }
 
 
@@ -51,16 +56,14 @@ abstract class SimpleReportingDelegate {
      * 
      * @param method
      * @param desc
-     * @param level
      */
     protected void writeMethod(String method, String desc) {
-        if(checkReporter()) { reporter.writeMethod(dslKey, dslAlias ?: method, desc) }
+        if(checkReporter()) { reporter.writeMethod(dslKey, method, dslAlias, desc) }
     }
 
 
     /**
      * 
-     * @param clazz
      * @param methods
      */
     public void addDelegateMethods(List methods) {

@@ -64,7 +64,7 @@ class OpenCSVCategory {
         def currentNames = []
         def header = []
 
-        //construct the path of each header, make sure to skip columsn if needed
+        //construct the path of each header, make sure to skip columns if needed
         for (i in skipLeftCols..size-(1+skipRightCols)) {
             List aList = []
             for (j in 0..rowCount-1) {

@@ -18,6 +18,7 @@ package org.beedom.dslforge
 import groovy.util.logging.Slf4j
 import groovy.lang.MissingPropertyException
 
+import org.apache.commons.io.FilenameUtils;
 import org.codehaus.groovy.control.CompilerConfiguration
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 
@@ -208,8 +209,22 @@ public class DSLEngine  {
         }
 
         if(dslConfig.dsl.defaultDelegate) {
-            String dslKey = getDelegateDslKey( dslConfig.dsl.defaultDelegate );
+            Class clazz = null
 
+            if( dslConfig.dsl.defaultDelegate instanceof Class ) {
+                clazz = dslConfig.dsl.defaultDelegate
+            }
+            else if(dslConfig.dsl.defaultDelegate instanceof Map) {
+                clazz = dslConfig.dsl.defaultDelegate[FilenameUtils.getExtension(scriptName)]
+            }
+            else {
+                throw new RuntimeException("Type of $config must be Class or Map")
+            }
+            
+            assert clazz, "Could not identify class for default delegate"
+
+            String dslKey = getDelegateDslKey( clazz );
+            
             log.info( "Try to enhance the script with the dslKey: '$dslKey'" )
 
             //TODO: modify original Script object using GroovyScriptEngine and GroovyClassLoader.parse() (how???)

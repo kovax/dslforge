@@ -5,6 +5,9 @@ package org.beedom.dslforge
 
 import java.lang.reflect.Method;
 
+import org.codehaus.groovy.transform.TupleConstructorASTTransformation;
+
+import groovy.transform.TupleConstructor;
 import groovy.util.logging.Slf4j
 
 
@@ -13,6 +16,7 @@ import groovy.util.logging.Slf4j
  *
  */
 @Slf4j
+@TupleConstructor
 class SimpleRenderer implements ReportRenderer {
     
     public enum ReportType {TXT, HTML, XML, TEXTILE, MARKKDOWN, TWIKI, MEDIAWIKI, CONFLUENCE, TRACWIKI}
@@ -24,17 +28,6 @@ class SimpleRenderer implements ReportRenderer {
     private static final int tabSize = 2
 
     private int level = 0
-
-    /**
-     * 
-     * @param w
-     * @param t
-     */
-    public SimpleRenderer(Writer w, ReportType t) {
-        writer = w
-        type = t
-    }
-
 
     /**
      * 
@@ -59,18 +52,26 @@ class SimpleRenderer implements ReportRenderer {
     /**
      * 
      */
-    public void openContext(String clazz, String context, String desc) {
-        log.debug "$type rendering(open  level $level): '$clazz: $context $desc'"
+    public void openContext(String dslKey, String alias, String desc) {
+        log.debug "$type rendering(open  level $level): '$dslKey: $alias $desc'"
 
         if(type == ReportType.XML) {
             printTabs(level)
-            writer.println "<${clazz} context='$context' description='$desc'>"
+            writer.print "<context dslKey='${dslKey}'"
+
+            if(alias) { writer.println " alias='$alias'>" }
+            else      { writer.println ">" }
+
+            if(desc) {
+                printTabs(level+1)
+                writer.println "<description>$desc</description>"
+            }
         }
         else {
             //Add new line at the very beginning for TXT report
             if(type == ReportType.TXT && level > 0) { writer.println() }
 
-            writeAllExceptXML(clazz, context, desc )
+            writeAllExceptXML(dslKey, alias, desc )
 
             //Add new line after each context opened for TXT report
             if(type == ReportType.TXT) { writer.println() }
@@ -83,13 +84,13 @@ class SimpleRenderer implements ReportRenderer {
     /**
      * 
      */
-    public void closeContext(String clazz, String context) {
+    public void closeContext(String dslKey, String alias) {
         level--
-        log.debug "$type rendering(close level $level): '$clazz: $context'"
+        log.debug "$type rendering(close level $level): '$dslKey: $alias'"
         
         if(type == ReportType.XML) {
             printTabs(level)
-            writer.println "</${clazz}>"
+            writer.println "</context>"
         }
         else if(type == ReportType.TXT) {
             writer.println()
@@ -100,26 +101,37 @@ class SimpleRenderer implements ReportRenderer {
     /**
      * 
      */
-    public void writeMethod(String clazz, String method, String desc ) {
-        log.debug "$type rendering(mehod level $level): '$clazz: $method $desc'"
+    public void writeMethod(String dslKey, String method, String alias, String desc) {
+        log.debug "$type rendering(mehod level $level): '$dslKey/$alias: $method $desc'"
         
         if(type == ReportType.XML) {
             printTabs(level)
-            writer.println "<${method}>$desc</${method}>"
+            writer.print "<method dslKey='$dslKey' name=$method"
+
+            if(alias) { writer.println " alias='$alias'>" }
+            else      { writer.println ">" }
+
+            if(desc) {
+                printTabs(level+1)
+                writer.println "<description>$desc</description>"
+            }
+
+            printTabs(level)
+            writer.println "</method>"
         }
         else {
-            writeAllExceptXML(clazz, method, desc )
+            writeAllExceptXML(dslKey, method, desc )
         }
     }
 
 
     /**
      * 
-     * @param clazz
+     * @param dslKey
      * @param method
      * @param desc
      */
-    private void writeAllExceptXML(String clazz, String method, String desc ) {
+    private void writeAllExceptXML(String dslKey, String method, String desc ) {
         if(type == ReportType.HTML) {
             writer.println "<h${level+2}>$method $desc</h${level+2}> "
         }

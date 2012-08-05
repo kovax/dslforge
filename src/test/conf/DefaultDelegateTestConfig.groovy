@@ -1,9 +1,12 @@
 environments {
      development {
-         dsl.emcInheritance = true
-         dsl.scripts = 'src/test/scripts'
-         dsl.defaultDelegate = org.beedom.dslforge.test.delegates.FeatureDelegate
-         dsl.delegates = [org.beedom.dslforge.test.delegates.ScenarioDelegate,
+         dsl {
+             emcInheritance = true
+             scripts = 'src/test/scripts'
+             defaultDelegate = [feature: org.beedom.dslforge.test.delegates.FeatureDelegate,
+                                scenario: org.beedom.dslforge.test.delegates.ScenarioDelegate]
+             delegates = [org.beedom.dslforge.test.delegates.ScenarioDelegate,
                           org.beedom.dslforge.test.delegates.FeatureDelegate]
+         }
      }
 }
