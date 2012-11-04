@@ -47,11 +47,21 @@ public class DSLEngine  {
     private def injectedAliases = Collections.synchronizedMap([:])
     private def delegatesMap = Collections.synchronizedMap([:])
 
-    /**
+	/**
+	 *
+	 * @param map
+	 */
+	public DSLEngine() {
+		log.debug "Constructor - DSLEngine()"
+		init()
+	}
+
+	/**
      * 
      * @param map
      */
     public DSLEngine(Map map) {
+		log.debug "Constructor - DSLEngine(Map)"
         if(map) {
             for (entry in map) {
                 this."${entry.key}" = entry.value
@@ -256,7 +266,7 @@ public class DSLEngine  {
 
 
     /**
-     * Run closure by enhancing it with EMC instance
+     * Run closure by enhancing it with categories and EMC instance
      * 
      * @param cl the Closure to be enhanced and run
      * @return returns the Object which is returned by the script

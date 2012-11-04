@@ -8,9 +8,10 @@ System.setProperty("file.encoding", "UTF-8")
 defaultTasks 'clean', 'build'
 
 version = '1.0'
-mainClass = 'org.beedom.dslforge.DSLEngine'
 group = 'org.beedom'
-groovyVersion = '1.8.4'
+mainClass = 'org.beedom.dslforge.DSLEngine'
+groovyVersion = '1.8.6'
+//groovyVersion = '2.0.4'
 
 manifest.mainAttributes("Implementation-Title": "DSLForge", "Implementation-Version": version, "Main-Class": mainClass)
 
@@ -27,9 +28,18 @@ dependencies {
     compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.0.0'
     compile group: 'net.sf.opencsv', name: 'opencsv', version: '2.3'
     compile 'org.hamcrest:hamcrest-library:1.2.1'
-    compile 'org.hamcrest:hamcrest-integration:1.2.1'   
+    compile 'org.hamcrest:hamcrest-integration:1.2.1'
+    compile 'commons-io:commons-io:2.2'
+    compile 'org.xerial:sqlite-jdbc:3.7.2'
 
     testCompile 'junit:junit-dep:4.+'
+}
+
+test {
+	testLogging {
+		showStandardStreams true
+		exceptionFormat "full"
+	}
 }
 
 tasks.withType(Upload) { // map the groovy configuration to compile in the pom

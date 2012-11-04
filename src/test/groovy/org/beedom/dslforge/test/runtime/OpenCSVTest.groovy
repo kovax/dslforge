@@ -1,4 +1,4 @@
-package org.beedom.dslforge.test
+package org.beedom.dslforge.test.runtime
 
 import org.junit.Before
 import org.junit.Test

@@ -100,6 +100,7 @@ class OpenCSVCategory {
         int index = -1
 
         //Dealing with repeating section, so handle it as List of Maps
+        //TODO: use regex here instead of string methods
         if(name.contains('[') && name.endsWith(']')) {
             int i = name.indexOf('[')
             index = name.substring(i+1,name.size()-1) as int
