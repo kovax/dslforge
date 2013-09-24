@@ -34,15 +34,28 @@ class CompareCSV {
     /**
      * DSL Key for DSLEngine
      */
-    def static final dslKey = "csvCompare"
+    def static final dslKey = "CSVCompare"
 
     private boolean failFast = false;
+
+	List<CompareField> fields = []
+	
+	String name
 
     def actualDatasource  = [:]
     def expectedDatasource = [:]    
     def difference = []
-
+	
     def index = 0
+
+	/**
+	 * 
+	 * @param n
+	 */
+//	public CompareCSV(String n) {
+//		name = n
+//	}
+
 
     /**
      * 
@@ -59,6 +72,7 @@ class CompareCSV {
             ds.options.strictQuotes
         );
     }
+
 
     /**
      * 
@@ -81,6 +95,7 @@ class CompareCSV {
             log.debug "using external header: ${ds.header}"
         }
     }
+
 
     /**
      * 
@@ -113,6 +128,24 @@ class CompareCSV {
         return null
     }
 
+	
+	/**
+	 * 
+	 * @param definedField
+	 */
+	public void mappingFields(Closure definedField) {
+		MetaBuilderDelegate mbd = new MetaBuilderDelegate()
+
+		mbd.processClosure(definedField)
+	}
+
+	/**
+	 * 	TODO: implement
+	 * 
+	 */
+	public void run() {
+	}
+
 
     /**
      * 
@@ -129,9 +162,10 @@ class CompareCSV {
         while ((actualNext = getNextRow(actualDatasource)) != null) {
             cl (actualNext, getNextRow(expectedDatasource), index++)
         }
-        
+
         log.debug "$difference"
     }
+
 
     /**
      * 

@@ -10,7 +10,7 @@ import org.junit.Before
 class TestBase {
 
 	DSLEngine dsle
-	def context
+	private def context
     def timeStamp
 
     def configFile = ""
@@ -23,9 +23,10 @@ class TestBase {
     @Before
 	public void init() {
         timeStamp = System.currentTimeMillis()
-        
-        if(!context) { context = new Binding(junit: "junit4") }
-        
+
+        //if(!context) { context = new Binding(junit: "junit4") }
+        context = new Binding(junit: "junit4")
+
         if(!dsle) {
             dsle = new DSLEngine(context: context, configFile: configFile, configEnv: configEnv, reporter: reporter)
         }

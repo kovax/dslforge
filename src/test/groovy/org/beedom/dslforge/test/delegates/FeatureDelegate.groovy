@@ -58,6 +58,7 @@ class FeatureDelegate {
     }
 
     def as_a(String desc, Closure cl) {
+		//assert context."$desc"
         doThisAlways("as_a", desc, cl)
     }
     

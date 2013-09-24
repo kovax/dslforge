@@ -7,7 +7,7 @@ define {
         lastName = "Customer_${timeStamp}"
         title = "Mr."
         sex = "M"
-        
+
         contacts {
             address {
                 purpose = "shiping,billing"
@@ -36,7 +36,7 @@ define {
             }
         }
     }
-    
+
     basket(title: "No Shiping Cost", net: 15.45, total: 18.16, currency: "EUR") {
         promos {
             promotion(name: "5% First Order Discount", discount: 0.05, total: 0.81)
@@ -52,7 +52,7 @@ define {
             }
         }
     }
-    
+
     basket(title: "With Shiping Cost:./ , :?\$", net: 20.35, vat: 3.56, total: 23.91, currency: "EUR") {
         shipping(method: "1st Class (3-5 days)", cost: 4.90)
         promos {

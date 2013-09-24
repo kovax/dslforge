@@ -29,7 +29,7 @@ class WebShopDelegate extends SimpleReportingDelegate  {
         
         loggedIn = true
 	}
-	
+
 	def login(User u) {
         assert u, "define user"
 

@@ -28,21 +28,27 @@ import groovytools.builder.MetaBuilder
  */
 @Slf4j
 class MetaBuilderDelegate {
-	def initialised = false
-	
+	private boolean initialised = false
+
 	def processClosure(Closure cl) {
 
 	    if(!initialised) {
 	    	context.metaBuilder = new MetaBuilder()
 
             context.mbSchemaFiles.each { String fPath ->
-                log.debug "MetaBuilder schema file: $fPath"
-                new GroovyShell( context ).evaluate( new File(fPath) )
+                log.info "Schema file: $fPath"
+				try {
+					new GroovyShell(context).evaluate( new File(fPath) )
+				} catch (FileNotFoundExceptione) {
+					new GroovyScriptEngine().createScript(fPath, context).run()
+				}
             }
 	    	initialised = true
 		}
 
-	    def objs = context.metaBuilder.buildList(cl)
-    	BindingConvention.bindObjectList( context, objs, context.mbObjectKeys )
+        log.debug "Building mbObjectList"
+
+	    context.mbObjectList = context.metaBuilder.buildList(cl)
+    	BindingConvention.bindObjectList( context, context.mbObjectList, context.mbObjectKeys )
 	}
 }

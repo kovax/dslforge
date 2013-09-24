@@ -5,6 +5,7 @@ import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter;
 import org.codehaus.groovy.ast.expr.ArgumentListExpression
 import org.codehaus.groovy.ast.expr.ClosureExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
@@ -44,10 +45,10 @@ public class UseRuntimeDSLTransformation implements ASTTransformation {
         MethodNode annotatedMethod = astNodes[1]
 
         ClosureExpression cl = new ClosureExpression(
-			annotatedMethod.parameters,
-			new BlockStatement(annotatedMethod.code.statements as Statement[], annotatedMethod.code.variableScope.copy())
-		)
-		cl.variableScope = cl.code.variableScope
+            copyParameters(annotatedMethod.parameters),
+            new BlockStatement(annotatedMethod.code.statements as Statement[], annotatedMethod.code.variableScope.copy())
+        )
+        cl.variableScope = cl.code.variableScope.copy()
 
         List existingStatements = annotatedMethod.code.statements
 
@@ -57,6 +58,15 @@ public class UseRuntimeDSLTransformation implements ASTTransformation {
         existingStatements.add(callDSLERun(cl))
     }
 
+	
+	private Parameter[] copyParameters(Parameter[] orig) {
+		Parameter[] copy = new Parameter[orig.length]
+		for (int i = 0; i < orig.length; i++) {
+			copy[i] = orig[i].clone();
+		} 
+		return copy
+//		return Arrays.copyOf(orig, orig.length)
+	}
 
 	/**
 	 * 

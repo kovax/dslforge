@@ -29,6 +29,8 @@ class DelegateTests extends TestBase {
                 }
             }
 
+			assert mbObjectList[0].kind == 'customer'
+
             feature "Shopping Cart Management", {
                 in_order "to use a webshop"
                 as_a "customer"
@@ -97,18 +99,19 @@ class DelegateTests extends TestBase {
 
             define {
                 user {
-                    kind = "customer"
+                    kind = "agent"
                     userid = "test@d${timeStamp}d.com"
                     password = "hellobaby"
                     firstName = "Test"
-                    lastName = "Customer_${timeStamp}"
+                    lastName = "Agent_${timeStamp}"
                     title = "Mr."
                     sex = "M"
                 }
             }
-            
+			assert mbObjectList[0].kind == 'agent'
+            assert agent
             webshop {
-                signIn customer
+                signIn agent
                 signOut
             }
         }

@@ -15,9 +15,8 @@ class MethodASTDelegateTests {
     @UseRuntimeDSL
     public void nestedDelegates() {
         dryRunScenario = false
-		timeStamp = System.currentTimeMillis()
-
-		define {
+        timeStamp = System.currentTimeMillis()
+        define {
             user {
                 kind = "customer"
                 userid = "test@d${timeStamp}d.com"

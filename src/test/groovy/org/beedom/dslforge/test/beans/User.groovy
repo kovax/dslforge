@@ -15,6 +15,10 @@ public class User {
     String sex       = ""
     String birthdate = ""
     String comment   = ""
+	
+	public String toString() {
+		return "$kind $firstName $lastName"
+	}
 
     List<Contact> contacts = []
     List<Payment> payments = []

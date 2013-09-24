@@ -43,7 +43,8 @@ class OpenCSVTest {
             new File("src/test/data/convertedTypes.csv").openCsvEachRow(headerRows:1, dateFormater:'yyyy/MM/dd') { types, i ->
                 assert types
                 
-                assert types.string == "customer"
+                assert types.empty == ''
+                assert types.string == 'customer'
                 assert types.integer == 34
                 assert types.date == new Date().parse('yyyy/MM/dd', '1969/02/23')
                 assert types.bigdecimal == 89.6
@@ -95,7 +96,7 @@ class OpenCSVTest {
         }
     }
 
-    def multiLineHeaderTester = { user, i ->
+    def multiLineHeaderTestClosure = { user, i ->
         assert user.kind
         assert user.sex
         assert user.age
@@ -155,7 +156,7 @@ class OpenCSVTest {
         def i=0
 
         use(OpenCSVCategory) {
-            new File("src/test/data/multiHeaderWithRepeat.csv").openCsvEachRow([headerRows:3], multiLineHeaderTester)
+            new File(multiLineHeaderFile).openCsvEachRow([headerRows:3], multiLineHeaderTestClosure)
         }
     }
 
@@ -169,7 +170,7 @@ class OpenCSVTest {
 
             checkMultiLineHeader(header)
 
-            new File(multiLineHeaderFile).openCsvEachRow(header:header, skipRows:3, multiLineHeaderTester)
+            new File(multiLineHeaderFile).openCsvEachRow(header:header, skipRows:3, multiLineHeaderTestClosure)
         }
     }
 
@@ -186,7 +187,7 @@ kind,userid,password,title,firstName,lastName,sex,age,purpose,country,countryCod
 
             checkMultiLineHeader(header)
 
-            new File(multiLineHeaderFile).openCsvEachRow(header:header, skipRows:3, multiLineHeaderTester)
+            new File(multiLineHeaderFile).openCsvEachRow(header:header, skipRows:3, multiLineHeaderTestClosure)
         }
     }
 
@@ -203,12 +204,14 @@ kind,userid,password,title,firstName,lastName,sex,age,purpose,country,countryCod
         def writer = new StringWriter()
         def xml = new MarkupBuilder(writer)
 
-        writer << '<?xml version="1.0" encoding="UTF-8"?>'
+        writer << '<?xml version="1.0" encoding="UTF-8"?>\n'
 
         use(OpenCSVCategory) {
             xml.calendar
             {
-                new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipLeftCols:1, skipRightCols:1, trimData:true]) { row, i ->
+                new String(wikiTable).openCsvEachRow([headerRows:1, separatorChar:'|', skipLeftCols:1, skipRightCols:1, trimData:true])
+				{ 
+					row, i ->
 
                     assert row.Num
                     assert row.Action

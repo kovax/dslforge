@@ -4,12 +4,12 @@ abstract class Delegate {
     def addDelegateMethods(List methods) {
         methods.each { method ->
             this.metaClass."$method" = { String desc ->
-                println "$method $desc"
+                println "1. $method $desc"
                 return [:].withDefault { key -> return { cl -> return cl() } }
             }
 
             this.metaClass."$method" = { String desc, Closure cl ->
-                println "$method $desc"
+                println "2. $method $desc"
                 return cl()
             }
         }
@@ -27,7 +27,7 @@ class Feature extends Delegate {
 
 
 def methodMissing(String name, args) {
-    println "$name $args"
+    println "methodMissing: $name $args"
 
     Closure cl = args[args.length-1]
     if (name == "scenario") {

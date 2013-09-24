@@ -74,14 +74,18 @@ public class SimpleReportingDelegate {
                 writeMethod(method, desc)
                 return [:].withDefault { key -> 
                     return { cl -> 
-                        if(cl && !context.dryRun) { return cl() }
+                        if(cl && ( !context.hasProperty("dryRun") || (context.hasProperty("dryRun") && !context.dryRun))) {
+							return cl()
+						}
                     }
                 }
             }
 
             this.metaClass."$method" = { String desc, Closure cl ->
                 writeMethod(method, desc)
-                if(cl && !context.dryRun) { return cl() }
+				if(cl && ( !context.hasProperty("dryRun") || (context.hasProperty("dryRun") && !context.dryRun))) {
+					return cl()
+				}
             }
         }
     }

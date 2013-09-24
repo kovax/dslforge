@@ -13,7 +13,7 @@ import org.junit.Test
  */
 class CompareCSVWithDiffTest extends TestBase {
 
-	def csv = "src/test/data/multiHeaderWithRepeat.csv"
+	def csv  = "src/test/data/multiHeaderWithRepeat.csv"
 	def csv2 = "src/test/data/multiHeaderWithRepeatv2.csv"
 
     @Before

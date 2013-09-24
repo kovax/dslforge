@@ -77,6 +77,10 @@ define {
 //This is added by MetaBuilderDelegate during the define block
 assert metaBuilder
 
+define {
+	product(categories: "Media_BR", id: "1", name: "Siverblade BL")
+}
+
 webshop {
 	assert context
 	

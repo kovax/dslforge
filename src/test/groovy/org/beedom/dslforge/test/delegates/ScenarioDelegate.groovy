@@ -26,12 +26,12 @@ class ScenarioDelegate {
 
     public ScenarioDelegate() {
     }
-    
+
     def doThisAlways(String method, String desc, Closure cl ) {
-        if(dslAlias) println "$dslAlias($method) $desc"
+        if(dslAlias) println "$bdslAlias($method) $desc"
         else println "$method $desc"
 
-        if(cl && !context.dryRunScenario) {
+        if(cl && (!context.hasProperty("dryRunScenario") || (context.hasProperty("dryRunScenario") && !context?.dryRunScenario))) {
             cl()
         }
     }

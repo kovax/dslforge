@@ -20,6 +20,7 @@ import groovy.lang.MissingPropertyException
 
 import org.apache.commons.io.FilenameUtils;
 import org.codehaus.groovy.control.CompilerConfiguration
+import org.codehaus.groovy.control.customizers.ASTTransformationCustomizer;
 import org.codehaus.groovy.control.customizers.ImportCustomizer
 
 import java.util.regex.Pattern
@@ -36,16 +37,18 @@ public class DSLEngine  {
     private String configFile = ""
     private String configEnv = ""
     private String scriptsHome = ""
-    
+
     private ConfigObject   dslConfig = null
     private Binding        context = null
     private ReportRenderer reporter = null
 
     private GroovyScriptEngine gse = null
     private aliases = [:]
-    
+
     private def injectedAliases = Collections.synchronizedMap([:])
     private def delegatesMap = Collections.synchronizedMap([:])
+
+	//private boolean initContext = false
 
 	/**
 	 *
@@ -82,10 +85,10 @@ public class DSLEngine  {
 
         cli.with {
             h longOpt: 'help', 'Show usage information'
-            c longOpt: 'config-file', args: 1, argName: 'confFile', 'Configuration file'
-            e longOpt: 'config-env',  args: 1, argName: 'confEnv', 'Configuration environment'
+            c longOpt: 'config-file', args: 1, argName: 'confFile',  'Configuration file'
+            e longOpt: 'config-env',  args: 1, argName: 'confEnv',   'Configuration environment'
             d longOpt: 'script-dir',  args: 1, argName: 'scriptDir', 'Script root directory'
-            p longOpt: 'pattern',     args: 1, argName: 'pattern', 'File pattern'
+            p longOpt: 'pattern',     args: 1, argName: 'pattern',   'File pattern'
         }
 
         def options = cli.parse(args)
@@ -150,6 +153,7 @@ public class DSLEngine  {
             ExpandoMetaClass.enableGlobally()
         }
 
+		//schema files for MetaBuilderDelegate
         if( dslConfig.dsl.mbSchemaFiles ) {
             context.mbSchemaFiles = dslConfig.dsl.mbSchemaFiles
         }
@@ -158,6 +162,8 @@ public class DSLEngine  {
     def createImportConfigration() {
         def configuration = new CompilerConfiguration()
         def customizer = new ImportCustomizer()
+		
+		ASTTransformationCustomizer ast
 
         if(dslConfig.dsl.imports.imports) {
             customizer.addImports(dslConfig.dsl.imports.imports as String[])
@@ -210,10 +216,10 @@ public class DSLEngine  {
      */
     def run(String scriptName) {
         log.info("running script file: $scriptName")
-        
+
         assert scriptsHome, "use config file or -d in command line to define the home of your scipts"
         def compConfig = new CompilerConfiguration()
-        
+
         if(dslConfig.dsl.imports) {
             compConfig = createImportConfigration()
         }
@@ -228,13 +234,13 @@ public class DSLEngine  {
                 clazz = dslConfig.dsl.defaultDelegate[FilenameUtils.getExtension(scriptName)]
             }
             else {
-                throw new RuntimeException("Type of $config must be Class or Map")
+                throw new RuntimeException("Type of config.dsl.defaultDelegate must be Class or Map")
             }
-            
+
             assert clazz, "Could not identify class for default delegate"
 
             String dslKey = getDelegateDslKey( clazz );
-            
+
             log.info( "Try to enhance the script with the dslKey: '$dslKey'" )
 
             //TODO: modify original Script object using GroovyScriptEngine and GroovyClassLoader.parse() (how???)
@@ -403,8 +409,15 @@ public class DSLEngine  {
      * @param clazz the delegate class
      */
     private void enhanceDelegateByConvention(Class clazz) {
+		log.debug "enhanceDelegateByConvention(Class $clazz)"
+
         //Convention: Inject 'context' property into delegate class
-        clazz.metaClass.getContext = {-> return context }
+		if(clazz.metaClass.properties.find{it.name=='context'}) {
+			//initContext = true
+		}
+		else {
+			clazz.metaClass.getContext = {-> return context }
+		}
 
         //Convention: Inject 'reporter' property into delegate class
         if(reporter) {
@@ -475,20 +488,27 @@ public class DSLEngine  {
      * @return closure to initialise the delegate instance
      */
     private Closure getProcessClosure(Class clazz) {
+		log.debug "getProcessClosure(Class $clazz)"
+		
         return {  Object[] args ->
             assert args, "Arguments of closure in DSL must not be empty"
             def l = args.length
 
             assert (args[l-1] instanceof Closure), "Last argument of closure must be closure"
             Closure cl = (Closure)args[l-1]
+			
+			def delegateInstance = null
 
-            //Construct of the delegate class and call its processClosure() method
+            //Construct of the delegate class
             if(l==1) {
-                return clazz.newInstance().processClosure(cl)
+                delegateInstance = clazz.newInstance()
             }
             else {
-                return clazz.newInstance(args[0..l-2] as Object[]).processClosure(cl)
+                delegateInstance = clazz.newInstance(args[0..l-2] as Object[])
             }
+
+            //if(initContext) { delegateInstance.context = context; initContext = false; }
+			return delegateInstance.processClosure(cl)
         }
     }
 
@@ -533,6 +553,8 @@ public class DSLEngine  {
                 else {
                     cl.delegate = clazz.newInstance(args[0..l-2] as Object[])
                 }
+
+                //if(initContext) { cl.delegate.context = context; initContext = false; }
 
                 //if class has a sharedInstance property add the class to the delegatesMap
                 if(clazz.metaClass.properties.find{it.name=="sharedInstance"}) {
@@ -579,7 +601,7 @@ public class DSLEngine  {
             return getDelegateClosure(clazz, method)
         }
     }
-    
+
 
     /**
      * Creates the closure to configure the EMC

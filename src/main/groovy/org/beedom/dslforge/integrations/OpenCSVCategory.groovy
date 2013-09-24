@@ -17,10 +17,12 @@ package org.beedom.dslforge.integrations
 
 import java.text.ParseException;
 
+import groovy.util.logging.Slf4j
+
 import au.com.bytecode.opencsv.CSVReader
 import au.com.bytecode.opencsv.CSVParser
 
-import groovy.util.logging.Slf4j
+
 
 /**
  *
@@ -91,10 +93,10 @@ class OpenCSVCategory {
      *
      * @param map
      * @param names List of String for one column e.g. 'contacts.address[0].purpose'
-     * @param value Can have various types
+     * @param value Is a String as returned by OpensCSV
      * @return
      */
-    public static void convertNamesToMaps(Map map, List names, boolean trim, String dateFormater, value) {
+    public static void convertNamesToMaps(Map map, List names, boolean trim, String dateFormater, String value) {
         String name = names.head()
         List namesTail = names.tail()
         int index = -1
@@ -110,6 +112,7 @@ class OpenCSVCategory {
         log.debug "$name index:$index names:$names value:'$value'"
 
         if(namesTail) {
+			//Names are not fully converted to maps and lists yet
             if(index == -1) {
                 if(!map[name]) { map[name] = [:] } //init Map
 
@@ -124,14 +127,15 @@ class OpenCSVCategory {
             }
         }
         else {
+			//Assign the value to the map and cast it to a real type
             if (!value) {
-                //
+                //value is null or empty string
                 map[name] = value
             }
             else if (value.isInteger()) {
                 map[name] = value.trim() as Integer
             }
-            else if (((String)value).isBigInteger()) {
+            else if (value.isBigInteger()) {
                 map[name] = value.trim() as BigInteger
             }
             else if (value.isBigDecimal()) {
@@ -192,7 +196,7 @@ class OpenCSVCategory {
 
             //TODO: processing lines could be done in parallel, but be careful as closure written by user
             while ((nextLine = reader.readNext()) != null) {
-                assert header.size() == nextLine.size()-(skipLeftCols+skipRightCols), "Header size must be equal with the size of data line"
+                assert header.size() == nextLine.size() - (skipLeftCols + skipRightCols), "Header size must be equal with the size of data line"
 
                 //header is a List of Lists
                 header.eachWithIndex { List names, i ->
@@ -225,6 +229,7 @@ class OpenCSVCategory {
         options.quoteChar     = options.quoteChar     ?: CSVParser.DEFAULT_QUOTE_CHARACTER
         options.escapeChar    = options.escapeChar    ?: CSVParser.DEFAULT_ESCAPE_CHARACTER
         options.strictQuotes  = options.strictQuotes  ?: CSVParser.DEFAULT_STRICT_QUOTES
+        //options.dateFormater  = options.dateFormater  ?: 'yyyy/MM/dd'
     }
 
 
@@ -239,7 +244,8 @@ class OpenCSVCategory {
 
 
     /**
-     *
+     * Category method
+     * 
      * @param self
      * @param options
      * @return
@@ -248,7 +254,12 @@ class OpenCSVCategory {
         setDefaultOptions(options)
 
         CSVReader reader = new CSVReader(
-                new FileReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
+                new FileReader(self),
+				options.separatorChar as char, 
+				options.quoteChar as char, 
+				options.escapeChar as char, 
+				options.skipRows,
+				options.strictQuotes);
 
         return getCsvHeader(reader, options.headerRows, options.skipLeftCols, options.skipRightCols, options.trimHeader)
     }
@@ -276,7 +287,12 @@ class OpenCSVCategory {
         setDefaultOptions(options)
 
         CSVReader reader = new CSVReader(
-                new FileReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
+                new FileReader(self), 
+				options.separatorChar as char, 
+				options.quoteChar as char, 
+				options.escapeChar as char, 
+				options.skipRows, 
+				options.strictQuotes);
 
         processCsvEachRow(reader,options,cl)
     }
@@ -304,7 +320,12 @@ class OpenCSVCategory {
         setDefaultOptions(options)
 
         CSVReader reader = new CSVReader(
-                new StringReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
+                new StringReader(self), 
+				options.separatorChar as char, 
+				options.quoteChar as char, 
+				options.escapeChar as char, 
+				options.skipRows, 
+				options.strictQuotes);
 
         return getCsvHeader(reader, options.headerRows, options.skipLeftCols, options.skipRightCols, options.trimHeader)
     }
@@ -332,7 +353,12 @@ class OpenCSVCategory {
         setDefaultOptions(options)
 
         CSVReader reader = new CSVReader(
-                new StringReader(self), options.separatorChar as char, options.quoteChar as char, options.escapeChar as char, options.skipRows, options.strictQuotes);
+                new StringReader(self), 
+				options.separatorChar as char, 
+				options.quoteChar as char, 
+				options.escapeChar as char, 
+				options.skipRows, 
+				options.strictQuotes);
 
         processCsvEachRow(reader, options, cl)
     }

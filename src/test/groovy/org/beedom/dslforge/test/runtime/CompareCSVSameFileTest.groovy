@@ -24,7 +24,7 @@ class CompareCSVSameFileTest extends TestBase {
 	@Test
 	public void useGroovyAssert() {
 		dsle.run {
-			csvCompare (failFast:true) {
+			CSVCompare(name: 'c1', failFast: true) {
 				actualDatasource  = [file: csv, options:[headerRows:3]]
 				expectedDatasource = [file: csv, options:[headerRows:3]]
 
@@ -65,7 +65,7 @@ class CompareCSVSameFileTest extends TestBase {
     @Test
     public void useHamcrestAssertThat() {
         dsle.run {
-            csvCompare (failFast:true) {
+            CSVCompare(name: 'c1', failFast:true) {
                 actualDatasource  = [file: csv, options:[headerRows:3]]
                 expectedDatasource = [file: csv, options:[headerRows:3]]
 
@@ -106,7 +106,7 @@ class CompareCSVSameFileTest extends TestBase {
     @Test
     public void useGroovyAssertRow() {
         dsle.run {
-			csvCompare (failFast:true) {
+			CSVCompare(name: 'c1', failFast: true) {
 				actualDatasource  = [file: csv, options:[headerRows:3]]
 				expectedDatasource = [file: csv, options:[headerRows:3]]
 
@@ -122,7 +122,7 @@ class CompareCSVSameFileTest extends TestBase {
     @Test
     public void useHamcrestAssertThatRow() {
         dsle.run {
-			csvCompare (failFast:true) {
+			CSVCompare(name: 'c1', failFast: true) {
 				actualDatasource  = [file: csv, options:[headerRows:3]]
 				expectedDatasource = [file: csv, options:[headerRows:3]]
 
