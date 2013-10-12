@@ -29,24 +29,24 @@ and you can execute the following script:
         waitForPageToLoad "30000"
     }
 
-[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+[DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 takes the value of dslKey and registers a method called selenium in the EMC class of the script. 
 The method takes the 4 parameters, and calls the constructor of DefaultSelenum with all of them. In general, 
 the parameters passed the EMC method are used to construct the delegate class. The dslKey can also be specified 
 in the delegate class itself.
 
-Check [SeleniumDelagateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/SeleniumDelagateTests.groovy)
-and [SeleniumDelegate.groovy](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/delegates/SeleniumDelegate.groovy)
+Check [SeleniumDelagateTests](src/test/groovy/org/beedom/dslforge/test/SeleniumDelagateTests.groovy)
+and [SeleniumDelegate.groovy](src/test/groovy/org/beedom/dslforge/test/delegates/SeleniumDelegate.groovy)
 for more details about the different ways of integrating existing classes in DSLForge.
 
-Also check [DelegateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DelegateTests.groovy)
+Also check [DelegateTests](src/test/groovy/org/beedom/dslforge/test/DelegateTests.groovy)
 to see that Groovy handles nesting delegates very nicely.
 
 
 The DSL can be executed as a Script or Closure
 -----------------------------------------------------
 
-[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+[DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 has 2 run() methods, `def run(String scriptName)` takes a name of the script file and `def run(Closure cl)` takes
 a Closure. Both updates the instances with the enhanced EMC.
 
@@ -55,12 +55,12 @@ The execution context/binding of the DSL is injected into each delegate class
 -----------------------------------------------------------------------------
 
 The variable called context, instance of the Binding class, is injected into each delegate class. 
-[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+[DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 can be initialised with an existing Binding instance, so you have all the possible ways to share data between 
 different parts of the execution environment. As you very likely know Binding is used in the Script class by default, 
 so to support context sharing in Closures the DSLEngine assign its context property to the delegate field of Closure
 instance.
-Check the [DSLContextTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DSLContextTests.groovy)
+Check the [DSLContextTests](src/test/groovy/org/beedom/dslforge/test/DSLContextTests.groovy)
 from more details.
 
 
@@ -69,7 +69,7 @@ Configuration entry to specify Category classes
 
 The dsl.categories entry in the config file can specify a list of Category classes, and the DLSEngine will execute
 the Script or Closure within the closure of `use(categories)` method.
-Check [DecoratorTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DecoratorTests.groovy)
+Check [DecoratorTests](src/test/groovy/org/beedom/dslforge/test/DecoratorTests.groovy)
 for more details.
 
 
@@ -79,7 +79,7 @@ Method aliases in delegate classes
 Each delegate class may have a static aliases property, which holds a map, in which you can specify the list of aliases
 for any methods that the delegate is implemeneting. This way it is easy to implement the same DSL in different languages
 or adjust it for different problem domains. 
-Check [DelegateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DelegateTests.groovy)
+Check [DelegateTests](src/test/groovy/org/beedom/dslforge/test/DelegateTests.groovy)
 for more details. 
 
 
@@ -88,7 +88,7 @@ EMC method calls processClosure(closure) of the delegate class
 
 If you require to take the full control on how the closure is executed in your DSL implementation, you can define
 the `processClosure(Closure)` method in your delegate class.
-[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+[DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 looks for that methods in the delegate class,
 and if it exists, it will call it instead of setting up the delegation pattern. It was used in my functional testing
 project to setup fixture data in a very user friendly way. Consider the following DSL snippet from the AllFuntionalityScript.
@@ -108,10 +108,10 @@ project to setup fixture data in a very user friendly way. Consider the followin
 
 The define keyword is associated with the MetaBuilderDelegate class, which has the processClosure() method. 
 MetaBuilder provides a very flexible solution to populate POJOs, and as it can use Closure it integrates very well 
-with [DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy).
-[MetaBuilderDelegate](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/delegates/MetaBuilderDelegate.groovy) 
+with [DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy).
+[MetaBuilderDelegate](src/test/groovy/org/beedom/dslforge/test/delegates/MetaBuilderDelegate.groovy) 
 initialise itself from a script containing the schema definition and a map called
-objectKeys, and using the [BindingConvention](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/BindingConvention.groovy)
+objectKeys, and using the [BindingConvention](src/main/groovy/org/beedom/dslforge/BindingConvention.groovy)
 it adds the customer property of User class to the context.
 
 
@@ -128,7 +128,7 @@ Nested calls of the same DSL keyword can be handled by the same delegate instanc
 
 In this example the delegate class for the "feature" term will be constructed twice. If you need to avoid that,
 the delegate class can define a static property called sharedInstance. In this case
-[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+[DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 stores the instance of the delegate class, and retrieves it for the second "feature", and calls its `init(args)` 
 method instead of calling its constructor.
 
@@ -150,16 +150,16 @@ Default delegate can be specified in the config file
 ----------------------------------------------------
 
 Add the entry like bellow to the 
-[DSLConfig.groovy](https://github.com/kovax/dslforge/blob/master/src/test/conf/DefaultDelegateTestConfig.groovy) file:
+[DSLConfig.groovy](src/test/conf/DefaultDelegateTestConfig.groovy) file:
 
     dsl.defaultDelegate = org.beedom.dslforge.test.delegates.FeatureDelegate
 
-[DSLEngine](https://github.com/kovax/dslforge/blob/master/src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
+[DSLEngine](src/main/groovy/org/beedom/dslforge/DSLEngine.groovy)
 will automatically extend the sript with the dslKey of the delegate class. This can be usefull as it makes
 the DSL script more concise in case there is only one delegate class for the given DSL or the given DSL is more complex
 having more delegates and one of them should always be used.
-Check [DefaultDelegateTests](https://github.com/kovax/dslforge/blob/master/src/test/groovy/org/beedom/dslforge/test/DefaultDelegateTests.groovy)
-and [DefaultDelegate.feature](https://github.com/kovax/dslforge/blob/master/src/test/scripts/DefaultDelegate.feature).
+Check [DefaultDelegateTests](src/test/groovy/org/beedom/dslforge/test/DefaultDelegateTests.groovy)
+and [DefaultDelegate.feature](src/test/scripts/DefaultDelegate.feature).
 
 **IMPORTANT: Default delegate only works for Scripts i.e. NO support for Closures YET!!!**
 
@@ -168,7 +168,7 @@ Imports can be added to Scripts by the integration with ImportCostumizer
 ----------------------------------------------------
 
 Add the entries like bellow to the 
-[DSLConfig.groovy](https://github.com/kovax/dslforge/blob/master/src/test/conf/ImportCustomizerTestConfig.groovy) file:
+[DSLConfig.groovy](src/test/conf/ImportCustomizerTestConfig.groovy) file:
 
     imports {
         imports = [groovytools.builder.MetaBuilder.name]
@@ -179,7 +179,7 @@ Add the entries like bellow to the
         aliasedStaticImports = [France:[Locale.name,'FRENCH']]
     }
 
-Check the [InputCustomizerTestScript.groovy](https://github.com/kovax/dslforge/blob/master/src/test/script/ImportCustomizerTestScript.groovy)
+Check the [InputCustomizerTestScript.groovy](src/test/script/ImportCustomizerTestScript.groovy)
 to see the import in 'actions'.
 
 
