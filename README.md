@@ -18,7 +18,7 @@ Configuration entry to specify Delegate classes
 
 Add the `[dslKey: "selenium", clazz: com.thoughtworks.selenium.DefaultSelenium]` specification to the dsl.delegates 
 entry (it expects `List<Class>` or `Map<String,Class>`) in the 
-[DSL config file](https://github.com/kovax/dslforge/blob/master/src/test/conf/DelegateTestConfig.groovy),
+[DSL config file](src/test/conf/DelegateTestConfig.groovy),
 and you can execute the following script:
 
     selenium "localhost", 4444, "*firefox", "http://www.google.com", {
