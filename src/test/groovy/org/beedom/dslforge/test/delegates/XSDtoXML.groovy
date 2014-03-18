@@ -240,28 +240,15 @@ class XSDtoXML {
     public static void main(String[] args) {
         XSDtoXML g = new XSDtoXML()
 
-//		g.declaredNameSpaces = [
-//			tns:'http://bar.types.dbp.hu/BARData',
-//			xsd:'http://www.w3.org/2001/XMLSchema'
-//		]
-//		g.rootXSDPath = './xsd_wsdl/hu/dbp/types/bar'
-//		g.rootXSD     = 'BARData.xsd'
-//		g.rootNS      = 'tns'
-//		g.schemas.put( g.rootNS, new XmlSlurper().parse(g.rootXSDPath+'/'+g.rootXSD).declareNamespace(g.declaredNameSpaces))
-//		g.processRootElement( 'getSyncBARResponse', 'tns', 'bar' )
-
-        g.declaredNameSpaces = [
-                tns: "http://khr.types.raiffeisen.hu/KHRData",
-                common: "http://common.types.raiffeisen.hu/common",
-                Ocom: "http://companycommon.companyinfo.types.raiffeisen.hu/CompanyCommon",
-                xsd: "http://www.w3.org/2001/XMLSchema"
-        ]
-
-        g.rootXSDPath = '../KHRServices_MSet/importFiles/hu/raiffeisen/types/khr'
-        g.rootXSD = 'KHRData.xsd'
-        g.rootNS = 'tns'
-
-        g.schemas.put(g.rootNS, new XmlSlurper().parse(g.rootXSDPath + '/' + g.rootXSD).declareNamespace(g.declaredNameSpaces))
-        g.processRootElement('getDiscoveredPersonFromKHRResponse', 'tns', 'khr')
+		g.declaredNameSpaces = [
+			tns:'http://bar.types.dbp.hu/BARData',
+			xsd:'http://www.w3.org/2001/XMLSchema'
+		]
+		
+		g.rootXSDPath = './xsd_wsdl/hu/dbp/types/bar'
+		g.rootXSD     = 'BARData.xsd'
+		g.rootNS      = 'tns'
+		g.schemas.put( g.rootNS, new XmlSlurper().parse(g.rootXSDPath+'/'+g.rootXSD).declareNamespace(g.declaredNameSpaces))
+		g.processRootElement( 'getSyncBARResponse', 'tns', 'bar' )
     }
 }
