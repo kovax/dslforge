@@ -1,9 +1,6 @@
 DSLForge
 ========
 
-* This will become a table of contents (this text will be scraped).
-{:toc}
-
 *Groovy DSL on Rails*
 
 The primary goal of the project is to help DSL development by providing a flexible framework for easy creation,
@@ -14,6 +11,9 @@ It is based on the approach described in the
 in which each new term in the DSL are delegate to a method of a specific delegate class. I have found this the 
 neat way of separating concerns, so I have generalised it a bit further, I have added some conventions inspired 
 by Grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
+
+
+{:toc}
 
 
 Configuration entry to specify Delegate classes
