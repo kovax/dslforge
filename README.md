@@ -1,6 +1,9 @@
 DSLForge
 ========
 
+* This will become a table of contents (this text will be scraped).
+{:toc}
+
 *Groovy DSL on Rails*
 
 The primary goal of the project is to help DSL development by providing a flexible framework for easy creation,
