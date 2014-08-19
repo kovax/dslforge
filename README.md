@@ -13,7 +13,7 @@ neat way of separating concerns, so I have generalised it a bit further, I have 
 by Grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
 
 
-{:toc}
+[[TOC]] 
 
 
 Configuration entry to specify Delegate classes
