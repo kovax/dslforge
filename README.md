@@ -1,3 +1,5 @@
+[[TOC]]
+
 DSLForge
 ========
 
@@ -11,9 +13,6 @@ It is based on the approach described in the
 in which each new term in the DSL are delegate to a method of a specific delegate class. I have found this the 
 neat way of separating concerns, so I have generalised it a bit further, I have added some conventions inspired 
 by Grails, and with the help of Groovy's fantastic MOP support, the project offers you the following features:
-
-
-[[TOC]] 
 
 
 Configuration entry to specify Delegate classes
